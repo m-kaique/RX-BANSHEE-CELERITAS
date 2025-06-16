@@ -10,8 +10,6 @@
 
 ---
 
-## ⚡ Visão Geral
+## ⚡
 
-**RX‑BANSHEE CELERITAS** é um Expert Advisor (EA), inspirado no lendário RX‑0 Unicorn Gundam 02 Banshee: robustez, velocidade máxima e precisão absoluta.
-
-Projetado para operações em timeframes curtos (3–5 minutos)
+**RX‑BANSHEE CELERITAS**  Expert Advisor (EA)

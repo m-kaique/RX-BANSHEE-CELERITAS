@@ -1,0 +1,8 @@
+*.ex4
+*.ex5
+*.log
+*.tmp
+*.bak
+*.user
+*.db
+.DS_Store

@@ -1,0 +1,111 @@
+#ifndef INTEGRATEDPA_SIGNALENGINE_MQH
+#define INTEGRATEDPA_SIGNALENGINE_MQH
+#include "Defs.mqh"
+#include "Utils.mqh"
+#include "strategies/TrendRangeDay.mqh"
+#include "strategies/WedgeReversal.mqh"
+#include "strategies/SpikeAndChannel.mqh"
+#include "strategies/PullbackToMA.mqh"
+#include "strategies/RangeFade.mqh"
+#include "strategies/RangeBreakout.mqh"
+#include "strategies/MeanReversion50to200.mqh"
+#include "strategies/VWAPReversion.mqh"
+#include "strategies/BollingerStochastic.mqh"
+#include "strategies/FibonacciRetrace.mqh"
+ 
+
+class SignalEngine
+{
+public:
+   SignalEngine(){}
+   ~SignalEngine(){}
+
+   // Gera sinal principal
+   Signal Generate(const string symbol,MARKET_PHASE phase,ENUM_TIMEFRAMES tf)
+   {
+      Signal s; s.valid=false;
+      switch(phase)
+      {
+         case PHASE_TREND:
+            s=GenerateTrendSignals(symbol,tf);
+            break;
+         // case PHASE_RANGE:
+         //    s=GenerateRangeSignals(symbol,tf);
+         //    break;
+         // case PHASE_REVERSAL:
+         //    s=GenerateReversalSignals(symbol,tf);
+         //    break;
+         default:
+            break;
+      }
+      return s;
+   }
+
+private:
+   // Estratégias de tendência
+   Signal GenerateTrendSignals(const string symbol,ENUM_TIMEFRAMES tf)
+   {
+      Signal s; s.valid=false;
+      // Prefer Spike and Channel detection before other trend strategies
+      SpikeAndChannel sac;
+      if(UseSpikeAndChannel && sac.Identify(symbol,tf))
+         return sac.GenerateSignal(symbol,tf);
+
+      // PullbackToMA pb;
+      // if(UsePullbackMA && pb.Identify(symbol,tf))
+      //    return pb.GenerateSignal(symbol,tf);
+
+      // FibonacciRetrace fr;
+      // if(UseFibonacciRetrace && fr.Identify(symbol,tf))
+      //    return fr.GenerateSignal(symbol,tf);
+
+      // BollingerStochastic bs;
+      // if(UseBollingerStochastic && bs.Identify(symbol,tf))
+      //    return bs.GenerateSignal(symbol,tf);
+
+      // TrendRangeDay trd;
+      // if(UseTrendRangeDay && trd.Identify(symbol,tf))
+      //    return trd.GenerateSignal(symbol,tf);
+
+      return s;
+   }
+
+   // Estratégias de range
+   Signal GenerateRangeSignals(const string symbol,ENUM_TIMEFRAMES tf)
+   {
+      Signal s; s.valid=false;
+      RangeBreakout br;
+      if(UseRangeBreakout && br.Identify(symbol,tf))
+         return br.GenerateSignal(symbol,tf);
+
+      RangeFade rf;
+      if(UseRangeFade && rf.Identify(symbol,tf))
+         return rf.GenerateSignal(symbol,tf);
+
+      return s;
+   }
+
+   // Estratégias de reversão
+  Signal GenerateReversalSignals(const string symbol,ENUM_TIMEFRAMES tf)
+  {
+      Signal s; s.valid=false;
+      WedgeReversal wr;
+      bool isRising=false;
+      if(UseWedgeReversal && wr.Identify(symbol,tf,isRising))
+         return wr.GenerateSignal(symbol,tf);
+
+      MeanReversion50to200 mr;
+      bool buy=false;
+      if(UseMeanReversion50200 && mr.Identify(symbol,tf,buy))
+         return mr.GenerateSignal(symbol,tf);
+
+      VWAPReversion vr;
+      bool buy2=false;
+      if(UseVWAPReversion && vr.Identify(symbol,tf,buy2))
+         return vr.GenerateSignal(symbol,tf);
+
+      return s;
+  }
+};
+
+#endif // INTEGRATEDPA_SIGNALENGINE_MQH

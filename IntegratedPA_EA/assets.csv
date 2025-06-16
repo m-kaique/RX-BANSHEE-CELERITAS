@@ -1,0 +1,4 @@
+symbol,enabled,minLot,maxLot,lotStep,rangeThreshold,minStop,riskPercent,ctxTf,atrTf,atrPeriod,trailStart,trailDist
+BIT,false,0.01,10.0,0.01,50,1000,0.4,H4,MAIN,21,4000,900
+WDO,false,1.0,100.0,1.0,2,7,0.8,H1,MAIN,14,50,12
+WIN,true,1.0,100.0,1.0,80,200,1.2,H4,D1,14,200,200

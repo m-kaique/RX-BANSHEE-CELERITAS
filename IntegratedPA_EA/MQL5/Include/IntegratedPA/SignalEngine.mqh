@@ -1,3 +1,45 @@
+// Definições padrão para evitar erros do linter
+// Estas serão sobrescritas pelos valores reais quando incluído no EA principal
+#ifndef HAS_USE_SPIKE_AND_CHANNEL
+   #define UseSpikeAndChannel false
+#endif
+
+#ifndef HAS_USE_RANGE_BREAKOUT
+   #define UseRangeBreakout false
+#endif
+
+#ifndef HAS_USE_RANGE_FADE
+   #define UseRangeFade false
+#endif
+
+#ifndef HAS_USE_WEDGE_REVERSAL
+   #define UseWedgeReversal false
+#endif
+
+#ifndef HAS_USE_MEAN_REV_50200
+   #define UseMeanReversion50200 false
+#endif
+
+#ifndef HAS_USE_VWAP_REVERSION
+   #define UseVWAPReversion false
+#endif
+
+#ifndef HAS_USE_PULLBACK_MA
+   #define UsePullbackMA false
+#endif
+
+#ifndef HAS_USE_FIBONACCI_RETRACE
+   #define UseFibonacciRetrace false
+#endif
+
+#ifndef HAS_USE_BOLLINGER_STOCH
+   #define UseBollingerStochastic false
+#endif
+
+#ifndef HAS_USE_TREND_RANGE_DAY
+   #define UseTrendRangeDay false
+#endif
+
 #ifndef INTEGRATEDPA_SIGNALENGINE_MQH
 #define INTEGRATEDPA_SIGNALENGINE_MQH
 #include "Defs.mqh"

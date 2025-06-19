@@ -992,6 +992,68 @@ inline double AdaptiveSlopeThreshold(const string symbol, ENUM_TIMEFRAMES tf, in
    return baseThr * MathMax(fator, 1.0);
 }
 
+/// Busca suporte significativo examinando os pivôs mais recentes
+/// Referência: guia_completo_trading_v5.md linhas 410-415 destacam
+/// a importância psicológica dos extremos de range.
+inline double GetSupportLevel(const string symbol, ENUM_TIMEFRAMES tf, int lookback)
+{
+   if (lookback < 5)
+      lookback = 5;
+   int bars = iBars(symbol, tf);
+   int limit = MathMin(lookback, bars - 1);
+   double best = 0.0;
+   bool found = false;
+   for (int i = limit; i >= 2; i--)
+   {
+      double prev = iLow(symbol, tf, i + 1);
+      double curr = iLow(symbol, tf, i);
+      double next = iLow(symbol, tf, i - 1);
+      if (curr <= prev && curr <= next)
+      {
+         if (!found || curr < best)
+         {
+            best = curr;
+            found = true;
+         }
+      }
+   }
+   if (found)
+      return best;
+   int idx = iLowest(symbol, tf, MODE_LOW, limit, 1);
+   return (idx >= 0) ? iLow(symbol, tf, idx) : 0.0;
+}
+
+/// Busca resistência significativa examinando os pivôs recentes
+/// Conforme descrito no guia, traders observam os extremos anteriores
+/// como zonas prováveis de reação de preço
+inline double GetResistanceLevel(const string symbol, ENUM_TIMEFRAMES tf, int lookback)
+{
+   if (lookback < 5)
+      lookback = 5;
+   int bars = iBars(symbol, tf);
+   int limit = MathMin(lookback, bars - 1);
+   double best = 0.0;
+   bool found = false;
+   for (int i = limit; i >= 2; i--)
+   {
+      double prev = iHigh(symbol, tf, i + 1);
+      double curr = iHigh(symbol, tf, i);
+      double next = iHigh(symbol, tf, i - 1);
+      if (curr >= prev && curr >= next)
+      {
+         if (!found || curr > best)
+         {
+            best = curr;
+            found = true;
+         }
+      }
+   }
+   if (found)
+      return best;
+   int idx = iHighest(symbol, tf, MODE_HIGH, limit, 1);
+   return (idx >= 0) ? iHigh(symbol, tf, idx) : 0.0;
+}
+
 //+------------------------------------------------------------------+
 //| Verifica se o preço caminha pelas bandas de Bollinger           |
 //| Retorna true se o fechamento atual confirma a tendência ativa   |

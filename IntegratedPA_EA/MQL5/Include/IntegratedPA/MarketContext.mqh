@@ -303,6 +303,23 @@ public:
 /// Find support zones on the last `bars` completed candles. Zones are grouped
 /// within +/-0.5 ATR of each other. Returns the number of detected zones and
 /// fills the `zones` array with the zone center prices sorted ascending.
+/// Sort helper used when ArraySort constants are unavailable
+inline void SortDoubleArray(double &arr[], int count, bool ascend)
+{
+   for(int i=0;i<count-1;i++)
+   {
+      for(int j=i+1;j<count;j++)
+      {
+         if((ascend && arr[i]>arr[j]) || (!ascend && arr[i]<arr[j]))
+         {
+            double tmp=arr[i];
+            arr[i]=arr[j];
+            arr[j]=tmp;
+         }
+      }
+   }
+}
+
 inline int FindSupportZones(const string symbol, ENUM_TIMEFRAMES tf,
                             int bars, double &zones[])
 {
@@ -336,7 +353,7 @@ inline int FindSupportZones(const string symbol, ENUM_TIMEFRAMES tf,
          }
       }
    }
-   ArraySort(zones, WHOLE_ARRAY, 0, MODE_ASCEND);
+   SortDoubleArray(zones, count, true);
    return count;
 }
 
@@ -377,7 +394,7 @@ inline int FindResistanceZones(const string symbol, ENUM_TIMEFRAMES tf,
          }
       }
    }
-   ArraySort(zones, WHOLE_ARRAY, 0, MODE_DESCEND);
+   SortDoubleArray(zones, count, false);
    return count;
 }
 

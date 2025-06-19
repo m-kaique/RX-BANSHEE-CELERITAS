@@ -76,6 +76,7 @@ struct AssetConfig
    ENUM_TIMEFRAMES ctxTf; ///< Timeframe de contexto para confirmacao
    ENUM_TIMEFRAMES atrTf; ///< Timeframe do ATR para stops
    int      atrPeriod;    ///< Periodo do ATR por ativo
+   int      srLookback;   ///< Lookback para suportes/resistências
    double   prevHigh;     ///< Máxima do dia anterior
    double   prevLow;      ///< Mínima do dia anterior
    DAILY_BIAS dailyBias;  ///< Viés diário calculado na preparação

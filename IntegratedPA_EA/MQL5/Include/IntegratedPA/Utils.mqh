@@ -1080,4 +1080,45 @@ bool BollingerTrendConfirm(const string symbol, ENUM_TIMEFRAMES tf, bool isUpTre
    else
       return (close < middle[0] && (close - lower[0]) <= range * 0.2);
 }
+
+/// Draw or update support and resistance horizontal lines
+inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf, 
+                                       double supportLevel, double resistanceLevel)
+{
+   string supportName = "SR_Support_" + symbol + "_" + EnumToString(tf);
+   string resistanceName = "SR_Resistance_" + symbol + "_" + EnumToString(tf);
+   
+   // Support line
+   if (ObjectFind(0, supportName) < 0)
+   {
+      ObjectCreate(0, supportName, OBJ_HLINE, 0, 0, supportLevel);
+      ObjectSetInteger(0, supportName, OBJPROP_COLOR, clrBlue);
+      ObjectSetInteger(0, supportName, OBJPROP_STYLE, STYLE_SOLID);
+      ObjectSetInteger(0, supportName, OBJPROP_WIDTH, 2);
+      ObjectSetString(0, supportName, OBJPROP_TEXT, "Support: " + DoubleToString(supportLevel, _Digits));
+   }
+   else
+   {
+      ObjectSetDouble(0, supportName, OBJPROP_PRICE, supportLevel);
+      ObjectSetString(0, supportName, OBJPROP_TEXT, "Support: " + DoubleToString(supportLevel, _Digits));
+   }
+   
+   // Resistance line
+   if (ObjectFind(0, resistanceName) < 0)
+   {
+      ObjectCreate(0, resistanceName, OBJ_HLINE, 0, 0, resistanceLevel);
+      ObjectSetInteger(0, resistanceName, OBJPROP_COLOR, clrRed);
+      ObjectSetInteger(0, resistanceName, OBJPROP_STYLE, STYLE_SOLID);
+      ObjectSetInteger(0, resistanceName, OBJPROP_WIDTH, 2);
+      ObjectSetString(0, resistanceName, OBJPROP_TEXT, "Resistance: " + DoubleToString(resistanceLevel, _Digits));
+   }
+   else
+   {
+      ObjectSetDouble(0, resistanceName, OBJPROP_PRICE, resistanceLevel);
+      ObjectSetString(0, resistanceName, OBJPROP_TEXT, "Resistance: " + DoubleToString(resistanceLevel, _Digits));
+   }
+   
+   ChartRedraw(0);
+}
 #endif // INTEGRATEDPA_UTILS_MQH
+

@@ -83,16 +83,15 @@ private:
       return false;
    }
 
-
    //==============================================================
    // Algoritmos importados de new_MarketContext.mqh
    //==============================================================
 
    bool CheckMovingAveragesAlignment(const string symbol, ENUM_TIMEFRAMES tf)
    {
-      int h9   = GetEMAHandle(symbol, tf, 9);
-      int h21  = GetEMAHandle(symbol, tf, 21);
-      int h50  = GetEMAHandle(symbol, tf, 50);
+      int h9 = GetEMAHandle(symbol, tf, 9);
+      int h21 = GetEMAHandle(symbol, tf, 21);
+      int h50 = GetEMAHandle(symbol, tf, 50);
       int h200 = GetEMAHandle(symbol, tf, 200);
       if (h9 == INVALID_HANDLE || h21 == INVALID_HANDLE ||
           h50 == INVALID_HANDLE || h200 == INVALID_HANDLE)
@@ -104,12 +103,12 @@ private:
       ArraySetAsSeries(b50, true);
       ArraySetAsSeries(b200, true);
 
-      if (CopyBuffer(h9,0,0,1,b9)<=0 || CopyBuffer(h21,0,0,1,b21)<=0 ||
-          CopyBuffer(h50,0,0,1,b50)<=0 || CopyBuffer(h200,0,0,1,b200)<=0)
+      if (CopyBuffer(h9, 0, 0, 1, b9) <= 0 || CopyBuffer(h21, 0, 0, 1, b21) <= 0 ||
+          CopyBuffer(h50, 0, 0, 1, b50) <= 0 || CopyBuffer(h200, 0, 0, 1, b200) <= 0)
          return false;
 
-      bool up  = (b9[0] > b21[0] && b21[0] > b50[0] && b50[0] > b200[0]);
-      bool down= (b9[0] < b21[0] && b21[0] < b50[0] && b50[0] < b200[0]);
+      bool up = (b9[0] > b21[0] && b21[0] > b50[0] && b50[0] > b200[0]);
+      bool down = (b9[0] < b21[0] && b21[0] < b50[0] && b50[0] < b200[0]);
       return (up || down);
    }
 
@@ -127,9 +126,9 @@ private:
 
    int CheckTrendDirection(const string symbol, ENUM_TIMEFRAMES tf)
    {
-      int h9   = GetEMAHandle(symbol, tf, 9);
-      int h21  = GetEMAHandle(symbol, tf, 21);
-      int h50  = GetEMAHandle(symbol, tf, 50);
+      int h9 = GetEMAHandle(symbol, tf, 9);
+      int h21 = GetEMAHandle(symbol, tf, 21);
+      int h50 = GetEMAHandle(symbol, tf, 50);
       int h200 = GetEMAHandle(symbol, tf, 200);
       if (h9 == INVALID_HANDLE || h21 == INVALID_HANDLE ||
           h50 == INVALID_HANDLE || h200 == INVALID_HANDLE)
@@ -141,8 +140,8 @@ private:
       ArraySetAsSeries(b50, true);
       ArraySetAsSeries(b200, true);
 
-      if (CopyBuffer(h9,0,0,1,b9)<=0 || CopyBuffer(h21,0,0,1,b21)<=0 ||
-          CopyBuffer(h50,0,0,1,b50)<=0 || CopyBuffer(h200,0,0,1,b200)<=0)
+      if (CopyBuffer(h9, 0, 0, 1, b9) <= 0 || CopyBuffer(h21, 0, 0, 1, b21) <= 0 ||
+          CopyBuffer(h50, 0, 0, 1, b50) <= 0 || CopyBuffer(h200, 0, 0, 1, b200) <= 0)
          return 0;
 
       if (b9[0] > b21[0] && b21[0] > b50[0] && b50[0] > b200[0])
@@ -164,7 +163,7 @@ private:
          return false;
 
       double rsiBuf[1];
-      if (CopyBuffer(rsiHandle,0,0,1,rsiBuf)<=0)
+      if (CopyBuffer(rsiHandle, 0, 0, 1, rsiBuf) <= 0)
          return false;
 
       double rsi = rsiBuf[0];
@@ -174,37 +173,46 @@ private:
       if (dir < 0 && rsi > 40)
          return false;
 
+
+      double near_supp = FindNearestSupport(_Symbol, PERIOD_M3);
+      double near_ress = FindNearestResistance(_Symbol, PERIOD_M3);
+      DrawSupportResistanceLines(_Symbol,PERIOD_M3,near_supp, near_ress);
       desc = "Trend";
       if (dir > 0)
          desc += " up";
       else if (dir < 0)
          desc += " down";
-      desc += ", RSI=" + DoubleToString(rsi,1);
+      desc += ", RSI=" + DoubleToString(rsi, 1);
+      Print("Near Supp: "+string(near_supp)+ " , Near Ress: " + (string)near_ress);
       Print("#####   " + desc + "  #####   ");
       return true;
    }
+
    bool IsRangePhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
    {
-      int h9   = GetEMAHandle(symbol, tf, 9);
-      int h21  = GetEMAHandle(symbol, tf, 21);
-      int h50  = GetEMAHandle(symbol, tf, 50);
+      int h9 = GetEMAHandle(symbol, tf, 9);
+      int h21 = GetEMAHandle(symbol, tf, 21);
+      int h50 = GetEMAHandle(symbol, tf, 50);
       int hAtr = GetATRHandle(symbol, tf, DEFAULT_ATR_PERIOD);
       int hRsi = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
-      if (h9==INVALID_HANDLE || h21==INVALID_HANDLE || h50==INVALID_HANDLE ||
-          hAtr==INVALID_HANDLE || hRsi==INVALID_HANDLE)
+      if (h9 == INVALID_HANDLE || h21 == INVALID_HANDLE || h50 == INVALID_HANDLE ||
+          hAtr == INVALID_HANDLE || hRsi == INVALID_HANDLE)
          return false;
 
       double b9[], b21[], b50[], atrBuf[], rsiBuf[];
-      ArraySetAsSeries(b9,true); ArraySetAsSeries(b21,true); ArraySetAsSeries(b50,true);
-      ArraySetAsSeries(atrBuf,true); ArraySetAsSeries(rsiBuf,true);
+      ArraySetAsSeries(b9, true);
+      ArraySetAsSeries(b21, true);
+      ArraySetAsSeries(b50, true);
+      ArraySetAsSeries(atrBuf, true);
+      ArraySetAsSeries(rsiBuf, true);
 
-      if (CopyBuffer(h9,0,0,3,b9)<=0 || CopyBuffer(h21,0,0,3,b21)<=0 ||
-          CopyBuffer(h50,0,0,3,b50)<=0 || CopyBuffer(hAtr,0,0,1,atrBuf)<=0 ||
-          CopyBuffer(hRsi,0,0,1,rsiBuf)<=0)
+      if (CopyBuffer(h9, 0, 0, 3, b9) <= 0 || CopyBuffer(h21, 0, 0, 3, b21) <= 0 ||
+          CopyBuffer(h50, 0, 0, 3, b50) <= 0 || CopyBuffer(hAtr, 0, 0, 1, atrBuf) <= 0 ||
+          CopyBuffer(hRsi, 0, 0, 1, rsiBuf) <= 0)
          return false;
 
-      double distance1 = MathAbs(b9[0]-b21[0]);
-      double distance2 = MathAbs(b21[0]-b50[0]);
+      double distance1 = MathAbs(b9[0] - b21[0]);
+      double distance2 = MathAbs(b21[0] - b50[0]);
       double atr = atrBuf[0];
       double n1 = distance1 / atr;
       double n2 = distance2 / atr;
@@ -215,11 +223,11 @@ private:
       if (rsi < 40 || rsi > 60)
          return false;
 
-      desc = "Range: RSI=" + DoubleToString(rsi,1);
+      desc = "Range: RSI=" + DoubleToString(rsi, 1);
       return true;
    }
 
-  bool IsReversalPhase(const string symbol, ENUM_TIMEFRAMES tf, string &desc)
+   bool IsReversalPhase(const string symbol, ENUM_TIMEFRAMES tf, string &desc)
    {
       int rsiHandle = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
       int ema9Handle = GetEMAHandle(symbol, tf, 9);
@@ -263,67 +271,68 @@ private:
          return true;
       }
       return false;
-  }
+   }
+
 public:
    /// Find nearest support level below the current price
    double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
-                             int lookback=50)
+                             int lookback = 50)
    {
-      if(!EnsureHistory(symbol, tf, lookback+1))
+      if (!EnsureHistory(symbol, tf, lookback + 1))
          return 0.0;
       double lows[];
-      ArraySetAsSeries(lows,true);
-      if(CopyLow(symbol, tf, 1, lookback, lows)!=lookback)
+      ArraySetAsSeries(lows, true);
+      if (CopyLow(symbol, tf, 1, lookback, lows) != lookback)
          return 0.0;
-      double price=iClose(symbol, tf, 0);
-      double level=0.0;
-      bool found=false;
-      for(int i=0;i<lookback;i++)
+      double price = iClose(symbol, tf, 0);
+      double level = 0.0;
+      bool found = false;
+      for (int i = 0; i < lookback; i++)
       {
-         double l=lows[i];
-         if(l<price)
+         double l = lows[i];
+         if (l < price)
          {
-            if(!found || l>level)
+            if (!found || l > level)
             {
-               level=l;
-               found=true;
+               level = l;
+               found = true;
             }
          }
       }
-      if(found)
+      if (found)
          return level;
-      int idx=ArrayMinimum(lows);
+      int idx = ArrayMinimum(lows);
       return lows[idx];
    }
 
    /// Find nearest resistance level above the current price
    double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
-                                int lookback=50)
+                                int lookback = 50)
    {
-      if(!EnsureHistory(symbol, tf, lookback+1))
+      if (!EnsureHistory(symbol, tf, lookback + 1))
          return 0.0;
       double highs[];
-      ArraySetAsSeries(highs,true);
-      if(CopyHigh(symbol, tf, 1, lookback, highs)!=lookback)
+      ArraySetAsSeries(highs, true);
+      if (CopyHigh(symbol, tf, 1, lookback, highs) != lookback)
          return 0.0;
-      double price=iClose(symbol, tf, 0);
-      double level=0.0;
-      bool found=false;
-      for(int i=0;i<lookback;i++)
+      double price = iClose(symbol, tf, 0);
+      double level = 0.0;
+      bool found = false;
+      for (int i = 0; i < lookback; i++)
       {
-         double h=highs[i];
-         if(h>price)
+         double h = highs[i];
+         if (h > price)
          {
-            if(!found || h<level)
+            if (!found || h < level)
             {
-               level=h;
-               found=true;
+               level = h;
+               found = true;
             }
          }
       }
-      if(found)
+      if (found)
          return level;
-      int idx=ArrayMaximum(highs);
+      int idx = ArrayMaximum(highs);
       return highs[idx];
    }
 

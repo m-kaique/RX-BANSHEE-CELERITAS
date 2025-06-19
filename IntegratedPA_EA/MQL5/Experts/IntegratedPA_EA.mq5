@@ -450,6 +450,9 @@ void OnTick()
       if (!IsNewBar(symbol, MainTimeframe, g_assets[i].lastBar))
          continue;
 
+      
+      g_market.set_sr(symbol);
+
       MARKET_PHASE phase = g_market.DetectPhaseMTF(symbol, MainTimeframe, g_assets[i].ctxTf,
                                                    g_assets[i].rangeThreshold);
 

@@ -21,7 +21,9 @@ public:
    ~MarketContextAnalyzer() {}
 
 private:
-   // garante que ha historico suficiente
+   // suporte e resistencia em varios timeframes
+   SRLevels sr_macro, sr_alto, sr_medio, sr_micro;
+// garante que ha historico suficiente
    bool EnsureHistory(const string symbol, ENUM_TIMEFRAMES tf, int bars)
    {
       MqlRates rates[];
@@ -248,19 +250,6 @@ public:
       {
          info.desc = "condicoes neutras";
       }
-
-      // suporte e resistencia em varios timeframes
-      SRLevels sr_macro = ComputeAndDrawSR(symbol, PERIOD_H4, "ctx_macro");
-      ComputeAndDrawSR(symbol, PERIOD_H1, "ctx_alto");
-      ComputeAndDrawSR(symbol, PERIOD_M30, "ctx_médio");
-      ComputeAndDrawSR(symbol, PERIOD_M15, "ctx_micro");
-
-
-      if (sr_macro.support > 0.0)
-         info.desc += " S:" + DoubleToString(sr_macro.support, sr_macro.digits);
-      if (sr_macro.resistance > 0.0)
-         info.desc += " R:" + DoubleToString(sr_macro.resistance, sr_macro.digits);
-
       return info;
    }
 
@@ -364,6 +353,13 @@ public:
          }
       }
       return resistance;
+   }
+
+   void set_sr(string symbol){
+      sr_macro = ComputeAndDrawSR(symbol, PERIOD_H4, "ctx_macro");
+      sr_alto = ComputeAndDrawSR(symbol, PERIOD_H1, "ctx_alto");
+      sr_medio = ComputeAndDrawSR(symbol, PERIOD_M30, "ctx_médio");
+      sr_micro = ComputeAndDrawSR(symbol, PERIOD_M15, "ctx_micro");
    }
 };
 

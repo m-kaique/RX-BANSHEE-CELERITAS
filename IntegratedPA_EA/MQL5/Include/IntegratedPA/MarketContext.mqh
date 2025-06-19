@@ -99,6 +99,7 @@ private:
       double slopeThr = AdaptiveSlopeThreshold(symbol, tf, 3);
 
       double rsi = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD);
+      double atr = GetATR(symbol, tf, DEFAULT_ATR_PERIOD);
 
       double macdMain, macdSig;
       bool macdOk = GetMACD(symbol, tf, 10, 21, 7, macdMain, macdSig);
@@ -106,6 +107,7 @@ private:
 
       double diff9_20 = MathAbs(ema9 - ema20) / point;
       double diff20_50 = MathAbs(ema20 - ema50) / point;
+      double distThr = MathMax(3.0, MathMin(rangeThr, (atr / point) * 0.01));
 
 
       bool slopeUpOk = true;
@@ -116,61 +118,42 @@ private:
          slopeDownOk = (slope9 < -slopeThr && slope20 < -slopeThr * 0.5);
       }
 
-      bool upTrendEMAs = (ema9 > ema20 && diff9_20 > rangeThr &&
-                          ema20 > ema50 && diff20_50 > rangeThr && slopeUpOk);
+      bool upTrendEMAs = (ema9 > ema20 && diff9_20 > distThr &&
+                          ema20 > ema50 && diff20_50 > distThr && slopeUpOk);
 
       // MACD: força recente de alta (main acima da signal).
       // RSI > 60: viés comprador está ativo, mas ainda não em sobrecompra (>70).
-      bool upTrendIndicators = (macdOk && macdMain > macdSig && rsi > 60);
+      bool upTrendIndicators = (macdOk && macdMain > macdSig && rsi > 55);
 
       if (upTrendEMAs && upTrendIndicators)
       {
-         // Confirmar com OBV
-         bool obvConfirm = CheckOBVTrendConfirmation(symbol, tf, true);
-         bool bollingerConfirm = BollingerTrendConfirm(symbol, tf, true);
-
-         if (obvConfirm && bollingerConfirm)
-         {
-            double obv = GetOBV(symbol, tf, VOLUME_REAL);
-            double obvSma = GetOBVSMA(symbol, tf, 14);
-            desc = "Tendência de Alta: EMAs alinhadas, MACD>signal, RSI=" +
-                   DoubleToString(rsi, 1);
-            if (tf == PERIOD_M3)
-               desc += ", slope=" + DoubleToString(slope9, 2);
-            desc += ", OBV confirmando (" +
-                    DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
-
-            Print("diff9_20 ->>>>>>>>>> " + (string)diff9_20);
-            Print("diff20_50 ->>>>>>>>>> " + (string)diff20_50);
-            Print(desc);
-            return true;
-         }
+         desc = "Tendência de Alta: EMAs alinhadas, MACD>signal, RSI=" +
+                DoubleToString(rsi, 1);
+         if (tf == PERIOD_M3)
+            desc += ", slope=" + DoubleToString(slope9, 2);
+         if (CheckOBVTrendConfirmation(symbol, tf, true))
+            desc += ", OBV ok";
+         if (BollingerTrendConfirm(symbol, tf, true))
+            desc += ", banda confirma";
+         return true;
       }
 
       // Verificação de tendência de baixa
-      bool downTrendEMAs = (ema9 < ema20 && diff9_20 > rangeThr &&
-                            ema20 < ema50 && diff20_50 > rangeThr && slopeDownOk);
-      bool downTrendIndicators = (macdOk && macdMain < macdSig && rsi < 40);
+      bool downTrendEMAs = (ema9 < ema20 && diff9_20 > distThr &&
+                            ema20 < ema50 && diff20_50 > distThr && slopeDownOk);
+      bool downTrendIndicators = (macdOk && macdMain < macdSig && rsi < 45);
 
       if (downTrendEMAs && downTrendIndicators)
       {
-         // Confirmar com OBV
-         bool obvConfirm = CheckOBVTrendConfirmation(symbol, tf, false);
-         bool bollingerConfirm = BollingerTrendConfirm(symbol, tf, false);
-
-         if (obvConfirm && bollingerConfirm)
-         {
-            double obv = GetOBV(symbol, tf, VOLUME_REAL);
-            double obvSma = GetOBVSMA(symbol, tf, 14);
-            desc = "Tendência de Baixa: EMAs alinhadas, MACD<signal, RSI=" +
-                   DoubleToString(rsi, 1);
-            if (tf == PERIOD_M3)
-               desc += ", slope=" + DoubleToString(slope9, 2);
-            desc += ", OBV confirmando (" +
-                    DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
-            Print(desc);
-            return true;
-         }
+         desc = "Tendência de Baixa: EMAs alinhadas, MACD<signal, RSI=" +
+                DoubleToString(rsi, 1);
+         if (tf == PERIOD_M3)
+            desc += ", slope=" + DoubleToString(slope9, 2);
+         if (CheckOBVTrendConfirmation(symbol, tf, false))
+            desc += ", OBV ok";
+         if (BollingerTrendConfirm(symbol, tf, false))
+            desc += ", banda confirma";
+         return true;
       }
       
       return false;

@@ -956,40 +956,32 @@ inline bool CheckOBVTrendConfirmation(const string symbol, ENUM_TIMEFRAMES tf, b
 }
 
 /// Calcula o slope (inclinação) da EMA entre o valor atual e N barras atrás
+/// Calcula o slope (inclinação) da EMA utilizando apenas candles fechados
+/// para evitar distorções enquanto o candle atual está em formação
 inline double GetEMASlope(const string symbol, ENUM_TIMEFRAMES tf, int period, int barsBack)
 {
    if (barsBack <= 0)
       return 0.0;
-   double now  = GetEMA(symbol, tf, period, 0);
-   double past = GetEMA(symbol, tf, period, barsBack);
+   // usa shift=1 para considerar o candle fechado mais recente
+   double now  = GetEMA(symbol, tf, period, 1);
+   double past = GetEMA(symbol, tf, period, barsBack + 1);
    return (now - past) / barsBack;
 }
 
 /// Threshold adaptativo baseado no ATR para avaliação do slope para verificação de tendencia
 // Retorna um threshold adaptativo para slope baseado em volatilidade e mínimo estatístico
+/// Calcula um threshold adaptativo de slope com base no ATR
+/// Utiliza porcentagem pequena da volatilidade para permitir
+/// confirmações mais rápidas em timeframes curtos
 inline double AdaptiveSlopeThreshold(const string symbol, ENUM_TIMEFRAMES tf, int barsBack)
 {
-   // Obter o ATR de 14 períodos
    double atr = GetATR(symbol, tf, 14);
-   if (atr <= 0.0)
-      return 34.0; // fallback padrão
-
-   // Garantir precisão dos pontos
    double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
-   if (point <= 0.0)
-      point = 1.0;
+   if (atr <= 0.0 || point <= 0.0)
+      return 10.0; // fallback modesto
 
-   // Base mínima confiável identificada pela estatística do WIN M3
-   const double baseThr = 34.0;
-
-   // ATR médio estimado para o timeframe (ajuste conforme necessidade real)
-   const double atrMedio = 400.0;
-
-   // Ajuste adaptativo proporcional à volatilidade atual
-   double fator = atr / atrMedio;
-
-   // Valor final ajustado, nunca inferior a 34
-   return baseThr * MathMax(fator, 1.0);
+   // 1% do ATR convertido em pontos do ativo
+   return (atr / point) * 0.01;
 }
 
 /// Busca suporte significativo examinando os pivôs mais recentes

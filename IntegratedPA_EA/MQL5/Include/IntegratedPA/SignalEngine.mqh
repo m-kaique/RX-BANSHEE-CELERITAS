@@ -63,16 +63,17 @@ public:
    ~SignalEngine(){}
 
    // Gera sinal principal
-   Signal Generate(const string symbol,MARKET_PHASE phase,ENUM_TIMEFRAMES tf)
+   Signal Generate(const AssetConfig &asset, MARKET_PHASE phase, ENUM_TIMEFRAMES tf)
    {
+      const string symbol = asset.symbol;
       Signal s; s.valid=false;
       switch(phase)
       {
          case PHASE_TREND:
-            s=GenerateTrendSignals(symbol,tf);
+            s=GenerateTrendSignals(asset,tf);
             break;
          // case PHASE_RANGE:
-         //    s=GenerateRangeSignals(symbol,tf);
+         //    s=GenerateRangeSignals(asset,tf);
          //    break;
          // case PHASE_REVERSAL:
          //    s=GenerateReversalSignals(symbol,tf);
@@ -85,8 +86,9 @@ public:
 
 private:
    // Estratégias de tendência
-   Signal GenerateTrendSignals(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateTrendSignals(const AssetConfig &asset, ENUM_TIMEFRAMES tf)
    {
+      const string symbol = asset.symbol;
       Signal s; s.valid=false;
       // Prefer Spike and Channel detection before other trend strategies
       SpikeAndChannel sac;
@@ -113,23 +115,25 @@ private:
    }
 
    // Estratégias de range
-   Signal GenerateRangeSignals(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateRangeSignals(const AssetConfig &asset, ENUM_TIMEFRAMES tf)
    {
+      const string symbol = asset.symbol;
       Signal s; s.valid=false;
       RangeBreakout br;
       if(UseRangeBreakout && br.Identify(symbol,tf))
-         return br.GenerateSignal(symbol,tf);
+         return br.GenerateSignal(symbol,tf,asset.srLookback);
 
       RangeFade rf;
       if(UseRangeFade && rf.Identify(symbol,tf))
-         return rf.GenerateSignal(symbol,tf);
+         return rf.GenerateSignal(symbol,tf,asset.srLookback);
 
       return s;
    }
 
    // Estratégias de reversão
-  Signal GenerateReversalSignals(const string symbol,ENUM_TIMEFRAMES tf)
+  Signal GenerateReversalSignals(const AssetConfig &asset, ENUM_TIMEFRAMES tf)
   {
+      const string symbol = asset.symbol;
       Signal s; s.valid=false;
       WedgeReversal wr;
       bool isRising=false;

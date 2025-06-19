@@ -44,7 +44,7 @@ public:
    }
 
    // Generate trade signal fading the range extreme
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol, ENUM_TIMEFRAMES tf, int srLookback)
    {
       Signal s; s.valid=false;
       if(!Identify(symbol,tf))
@@ -53,7 +53,7 @@ public:
       double range=m_high-m_low;
       double entry=iClose(symbol,tf,1);
       MarketContextAnalyzer ctx;
-      const int lvlLook=50;
+      const int lvlLook = srLookback;
       if(m_buySignal)
       {
          s.valid=true;

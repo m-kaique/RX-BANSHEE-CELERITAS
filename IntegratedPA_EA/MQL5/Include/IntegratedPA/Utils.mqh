@@ -848,7 +848,7 @@ inline bool LoadAssetCsv(const string path, ENUM_TIMEFRAMES mainTf, AssetConfig 
 
       {
          // discard header line
-         for (int i = 0; i < 12; i++)
+         for (int i = 0; i < 13; i++)
             FileReadString(handle);
          first = false;
          continue;
@@ -864,6 +864,7 @@ inline bool LoadAssetCsv(const string path, ENUM_TIMEFRAMES mainTf, AssetConfig 
       string ctxTfStr = FileReadString(handle);
       string atrTfStr = FileReadString(handle);
       int atrPeriod = (int)FileReadNumber(handle);
+      int srLookback = (int)FileReadNumber(handle);
       double trailStart = FileReadNumber(handle);
       double trailDist  = FileReadNumber(handle);
 
@@ -886,6 +887,7 @@ inline bool LoadAssetCsv(const string path, ENUM_TIMEFRAMES mainTf, AssetConfig 
       cfg.ctxTf = TfFromString(ctxTfStr, mainTf);
       cfg.atrTf = TfFromString(atrTfStr, mainTf);
       cfg.atrPeriod = atrPeriod;
+      cfg.srLookback = srLookback;
       cfg.prevHigh = 0.0;
       cfg.prevLow = 0.0;
       cfg.dailyBias = BIAS_NEUTRAL;

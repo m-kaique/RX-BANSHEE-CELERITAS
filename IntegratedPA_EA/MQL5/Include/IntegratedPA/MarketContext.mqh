@@ -174,8 +174,8 @@ private:
          return false;
 
 
-      double near_supp = FindNearestSupport(_Symbol, PERIOD_M3);
-      double near_ress = FindNearestResistance(_Symbol, PERIOD_M3);
+      double near_supp = FindNearestSupport(_Symbol, PERIOD_M3, 50);
+      double near_ress = FindNearestResistance(_Symbol, PERIOD_M3, 50);
       DrawSupportResistanceLines(_Symbol,PERIOD_M3,near_supp, near_ress);
       desc = "Trend";
       if (dir > 0)
@@ -276,7 +276,7 @@ private:
 public:
    /// Find nearest support level below the current price
    double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
-                             int lookback = 50)
+                             int lookback)
    {
       if (!EnsureHistory(symbol, tf, lookback + 1))
          return 0.0;
@@ -307,7 +307,7 @@ public:
 
    /// Find nearest resistance level above the current price
    double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
-                                int lookback = 50)
+                                int lookback)
    {
       if (!EnsureHistory(symbol, tf, lookback + 1))
          return 0.0;

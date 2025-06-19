@@ -453,7 +453,7 @@ void OnTick()
       MARKET_PHASE phase = g_market.DetectPhaseMTF(symbol, MainTimeframe, g_assets[i].ctxTf,
                                                    g_assets[i].rangeThreshold);
 
-      Signal sig = g_engine.Generate(symbol, phase, MainTimeframe);
+      Signal sig = g_engine.Generate(g_assets[i], phase, MainTimeframe);
 
       if (!sig.valid)
          continue;
@@ -589,6 +589,7 @@ bool SetupAssets()
       g_assets[idx].ctxTf = PERIOD_H4;   // MTF context per trading guide
       g_assets[idx].atrTf = MainTimeframe;
       g_assets[idx].atrPeriod = 21; // periodo maior para volatilidade do BTC
+      g_assets[idx].srLookback = 50;
       g_assets[idx].prevHigh = 0.0;
       g_assets[idx].prevLow = 0.0;
       g_assets[idx].dailyBias = BIAS_NEUTRAL;
@@ -612,6 +613,7 @@ bool SetupAssets()
       g_assets[idx].ctxTf = PERIOD_H1; // context timeframe per guide
       g_assets[idx].atrTf = MainTimeframe;
       g_assets[idx].atrPeriod = 14; // periodo padrao para o dolar
+      g_assets[idx].srLookback = 50;
       g_assets[idx].prevHigh = 0.0;
       g_assets[idx].prevLow = 0.0;
       g_assets[idx].dailyBias = BIAS_NEUTRAL;
@@ -635,6 +637,7 @@ bool SetupAssets()
       g_assets[idx].ctxTf = PERIOD_H1;   // context timeframe per guide
       g_assets[idx].atrTf = PERIOD_D1;   // volatilidade medida no diário conforme guia
       g_assets[idx].atrPeriod = 14;      // periodo do ATR diario
+      g_assets[idx].srLookback = 50;
       g_assets[idx].prevHigh = 0.0;
       g_assets[idx].prevLow = 0.0;
       g_assets[idx].dailyBias = BIAS_NEUTRAL;

@@ -60,7 +60,7 @@ public:
    }
 
    // Generate breakout signal using range projection
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol, ENUM_TIMEFRAMES tf, int srLookback)
    {
       Signal s; s.valid=false;
       if(!Identify(symbol,tf))
@@ -70,7 +70,7 @@ public:
       double entry=iClose(symbol,tf,1);
       double stop, target;
       MarketContextAnalyzer ctx;
-      const int lvlLook=50;
+      const int lvlLook = srLookback;
       if(m_buySignal)
       {
          s.valid=true;

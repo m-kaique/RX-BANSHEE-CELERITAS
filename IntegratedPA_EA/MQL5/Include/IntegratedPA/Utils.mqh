@@ -1018,4 +1018,74 @@ bool BollingerTrendConfirm(const string symbol, ENUM_TIMEFRAMES tf, bool isUpTre
    else
       return (close < middle[0] && (close - lower[0]) <= range * 0.2);
 }
+
+inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf,
+                                          double supportLevel, double resistanceLevel,
+                                          const string codename)
+   {
+      string tfStr = EnumToString(tf);
+      string supName   = "SR_Support_" + symbol + "_" + tfStr;
+      string resName   = "SR_Resistance_" + symbol + "_" + tfStr;
+      string supLabel  = supName + "_lbl";
+      string resLabel  = resName + "_lbl";
+
+      // --- suporte ---
+      if (ObjectFind(0, supName) < 0)
+      {
+         ObjectCreate(0, supName, OBJ_HLINE, 0, 0, supportLevel);
+         ObjectSetInteger(0, supName, OBJPROP_COLOR, C'0,255,55');
+         ObjectSetInteger(0, supName, OBJPROP_STYLE, STYLE_DASHDOT);
+         ObjectSetInteger(0, supName, OBJPROP_WIDTH, 1);
+      }
+      else
+      {
+         ObjectSetDouble(0, supName, OBJPROP_PRICE, supportLevel);
+      }
+
+      // label do suporte
+      datetime tRight = iTime(symbol, tf, 0) + PeriodSeconds(tf) * 5;
+      if (ObjectFind(0, supLabel) < 0)
+      {
+         ObjectCreate(0, supLabel, OBJ_TEXT, 0, tRight, supportLevel);
+         ObjectSetInteger(0, supLabel, OBJPROP_COLOR, C'0,255,55');
+         ObjectSetInteger(0, supLabel, OBJPROP_ANCHOR, ANCHOR_RIGHT_UPPER);
+      }
+      else
+      {
+         ObjectMove(0, supLabel, 0, tRight, supportLevel);
+      }
+      ObjectSetString(0, supLabel, OBJPROP_TEXT,
+                      codename + " Support: " +
+                      DoubleToString(supportLevel, _Digits));
+
+      // --- resistencia ---
+      if (ObjectFind(0, resName) < 0)
+      {
+         ObjectCreate(0, resName, OBJ_HLINE, 0, 0, resistanceLevel);
+         ObjectSetInteger(0, resName, OBJPROP_COLOR, clrRed);
+         ObjectSetInteger(0, resName, OBJPROP_STYLE, STYLE_DASHDOT);
+         ObjectSetInteger(0, resName, OBJPROP_WIDTH, 1);
+      }
+      else
+      {
+         ObjectSetDouble(0, resName, OBJPROP_PRICE, resistanceLevel);
+      }
+
+      // label da resistencia
+      if (ObjectFind(0, resLabel) < 0)
+      {
+         ObjectCreate(0, resLabel, OBJ_TEXT, 0, tRight, resistanceLevel);
+         ObjectSetInteger(0, resLabel, OBJPROP_COLOR, clrRed);
+         ObjectSetInteger(0, resLabel, OBJPROP_ANCHOR, ANCHOR_RIGHT_UPPER);
+      }
+      else
+      {
+         ObjectMove(0, resLabel, 0, tRight, resistanceLevel);
+      }
+      ObjectSetString(0, resLabel, OBJPROP_TEXT,
+                      codename + " Resistance: " +
+                      DoubleToString(resistanceLevel, _Digits));
+
+      ChartRedraw(0);
+   }
 #endif // INTEGRATEDPA_UTILS_MQH

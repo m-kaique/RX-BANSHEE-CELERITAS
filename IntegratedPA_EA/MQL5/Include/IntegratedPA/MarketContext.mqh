@@ -287,14 +287,138 @@ public:
       return DetectPhaseSingle(symbol, tf, rangeThr).phase;
    }
 
-   MARKET_PHASE DetectPhaseMTF(const string symbol, ENUM_TIMEFRAMES tf, ENUM_TIMEFRAMES ctxTf, double rangeThr = 10.0)
-   {
-      ENUM_TIMEFRAMES arr[2];
-      arr[0] = tf;
-      arr[1] = ctxTf;
-      return DetectPhaseMTF(symbol, arr, 2, rangeThr).phase;
-   }
+  MARKET_PHASE DetectPhaseMTF(const string symbol, ENUM_TIMEFRAMES tf, ENUM_TIMEFRAMES ctxTf, double rangeThr = 10.0)
+  {
+     ENUM_TIMEFRAMES arr[2];
+     arr[0] = tf;
+     arr[1] = ctxTf;
+     return DetectPhaseMTF(symbol, arr, 2, rangeThr).phase;
+  }
 };
+
+//---------------------------------------------------------------------------
+// Support/Resistance zone detection helpers
+//---------------------------------------------------------------------------
+
+/// Find support zones on the last `bars` completed candles. Zones are grouped
+/// within +/-0.5 ATR of each other. Returns the number of detected zones and
+/// fills the `zones` array with the zone center prices sorted ascending.
+inline int FindSupportZones(const string symbol, ENUM_TIMEFRAMES tf,
+                            int bars, double &zones[])
+{
+   double lows[];
+   if (CopyLow(symbol, tf, 1, bars, lows) != bars)
+      return 0;
+
+   double atr = GetATR(symbol, tf, DEFAULT_ATR_PERIOD);
+   double thr = atr * 0.5;
+
+   int count = 0;
+   for (int i = 1; i < bars - 1; i++)
+   {
+      if (lows[i] <= lows[i - 1] && lows[i] <= lows[i + 1])
+      {
+         double lvl = lows[i];
+         bool merged = false;
+         for (int j = 0; j < count; j++)
+         {
+            if (MathAbs(lvl - zones[j]) <= thr)
+            {
+               zones[j] = (zones[j] + lvl) / 2.0;
+               merged = true;
+               break;
+            }
+         }
+         if (!merged)
+         {
+            ArrayResize(zones, count + 1);
+            zones[count++] = lvl;
+         }
+      }
+   }
+   ArraySort(zones, WHOLE_ARRAY, 0, MODE_ASCEND);
+   return count;
+}
+
+/// Find resistance zones on the last `bars` completed candles. Zones are
+/// grouped within +/-0.5 ATR of each other. Returns the number of detected
+/// zones and fills the `zones` array with the zone center prices sorted
+/// descending.
+inline int FindResistanceZones(const string symbol, ENUM_TIMEFRAMES tf,
+                               int bars, double &zones[])
+{
+   double highs[];
+   if (CopyHigh(symbol, tf, 1, bars, highs) != bars)
+      return 0;
+
+   double atr = GetATR(symbol, tf, DEFAULT_ATR_PERIOD);
+   double thr = atr * 0.5;
+
+   int count = 0;
+   for (int i = 1; i < bars - 1; i++)
+   {
+      if (highs[i] >= highs[i - 1] && highs[i] >= highs[i + 1])
+      {
+         double lvl = highs[i];
+         bool merged = false;
+         for (int j = 0; j < count; j++)
+         {
+            if (MathAbs(lvl - zones[j]) <= thr)
+            {
+               zones[j] = (zones[j] + lvl) / 2.0;
+               merged = true;
+               break;
+            }
+         }
+         if (!merged)
+         {
+            ArrayResize(zones, count + 1);
+            zones[count++] = lvl;
+         }
+      }
+   }
+   ArraySort(zones, WHOLE_ARRAY, 0, MODE_DESCEND);
+   return count;
+}
+
+/// Helper to obtain the nearest value in `zones` to `price`.
+inline double NearestZoneValue(const double &zones[], int count, double price)
+{
+   if (count <= 0)
+      return 0.0;
+   double best = zones[0];
+   double dist = MathAbs(price - best);
+   for (int i = 1; i < count; i++)
+   {
+      double d = MathAbs(price - zones[i]);
+      if (d < dist)
+      {
+         dist = d;
+         best = zones[i];
+      }
+   }
+   return best;
+}
+
+/// Return the nearest support zone price from the last `bars` candles.
+inline double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
+                                 int bars)
+{
+   double zones[];
+   int cnt = FindSupportZones(symbol, tf, bars, zones);
+   double price = iClose(symbol, tf, 1);
+   return NearestZoneValue(zones, cnt, price);
+}
+
+/// Return the nearest resistance zone price from the last `bars` candles.
+inline double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
+                                    int bars)
+{
+   double zones[];
+   int cnt = FindResistanceZones(symbol, tf, bars, zones);
+   double price = iClose(symbol, tf, 1);
+   return NearestZoneValue(zones, cnt, price);
+}
 
 // compatibilidade com nome antigo
 #define MarketContext MarketContextAnalyzer

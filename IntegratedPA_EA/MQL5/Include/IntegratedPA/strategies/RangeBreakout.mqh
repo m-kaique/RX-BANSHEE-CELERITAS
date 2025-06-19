@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_RANGEBREAKOUT_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class RangeBreakout
 {
@@ -17,16 +18,32 @@ public:
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
    {
       const int lookback=20;
-      int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,2);
-      int idxLow =iLowest(symbol,tf,MODE_LOW, lookback,2);
-      if(idxHigh==-1 || idxLow==-1)
-         return false;
-      m_high=iHigh(symbol,tf,idxHigh);
-      m_low =iLow(symbol,tf,idxLow);
+      double supZones[];
+      double resZones[];
+      int sCnt=FindSupportZones(symbol,tf,lookback+2,supZones);
+      int rCnt=FindResistanceZones(symbol,tf,lookback+2,resZones);
+
+      double close1=iClose(symbol,tf,1);
+      if(sCnt>0)
+         m_low=NearestZoneValue(supZones,sCnt,close1);
+      else
+      {
+         int idxLow=iLowest(symbol,tf,MODE_LOW,lookback,2);
+         if(idxLow==-1) return false;
+         m_low=iLow(symbol,tf,idxLow);
+      }
+
+      if(rCnt>0)
+         m_high=NearestZoneValue(resZones,rCnt,close1);
+      else
+      {
+         int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,2);
+         if(idxHigh==-1) return false;
+         m_high=iHigh(symbol,tf,idxHigh);
+      }
       double range=m_high-m_low;
       if(range<=0.0)
          return false;
-      double close1=iClose(symbol,tf,1);
       double open1 =iOpen(symbol,tf,1);
 
       // volume médio para confirmação (Ferramentas Essenciais - Volume)

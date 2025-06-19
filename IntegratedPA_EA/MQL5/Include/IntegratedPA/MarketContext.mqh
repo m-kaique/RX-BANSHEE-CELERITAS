@@ -233,21 +233,32 @@ public:
       {
          info.phase = PHASE_TREND;
          info.desc = d;
-         return info;
       }
       // if (IsRangePhase(symbol, tf, rangeThr, d))
       // {
       //    info.phase = PHASE_RANGE;
       //    info.desc = d;
-      //    return info;
       // }
-      // if (IsReversalPhase(symbol, tf, d))
+      // else if (IsReversalPhase(symbol, tf, d))
       // {
       //    info.phase = PHASE_REVERSAL;
       //    info.desc = d;
-      //    return info;
       // }
-      info.desc = "condicoes neutras";
+      else
+      {
+         info.desc = "condicoes neutras";
+      }
+
+      // adiciona niveis de suporte e resistencia ao resumo
+      double price = iClose(symbol, tf, 0);
+      double sup = FindNearestSupport(symbol, tf, price);
+      double res = FindNearestResistance(symbol, tf, price);
+      int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+      if (sup > 0.0)
+         info.desc += " S:" + DoubleToString(sup, digits);
+      if (res > 0.0)
+         info.desc += " R:" + DoubleToString(res, digits);
+
       return info;
    }
 

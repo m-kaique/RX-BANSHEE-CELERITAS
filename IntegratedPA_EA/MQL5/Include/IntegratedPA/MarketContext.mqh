@@ -83,131 +83,180 @@ private:
       return false;
    }
 
-   //================================================================================
-   // Modificações para MarketContext.mqh - Função IsTrendPhase() otimizada
-   //================================================================================
+
+   //==============================================================
+   // Algoritmos importados de new_MarketContext.mqh
+   //==============================================================
+
+   bool CheckMovingAveragesAlignment(const string symbol, ENUM_TIMEFRAMES tf)
+   {
+      int h9   = GetEMAHandle(symbol, tf, 9);
+      int h21  = GetEMAHandle(symbol, tf, 21);
+      int h50  = GetEMAHandle(symbol, tf, 50);
+      int h200 = GetEMAHandle(symbol, tf, 200);
+      if (h9 == INVALID_HANDLE || h21 == INVALID_HANDLE ||
+          h50 == INVALID_HANDLE || h200 == INVALID_HANDLE)
+         return false;
+
+      double b9[], b21[], b50[], b200[];
+      ArraySetAsSeries(b9, true);
+      ArraySetAsSeries(b21, true);
+      ArraySetAsSeries(b50, true);
+      ArraySetAsSeries(b200, true);
+
+      if (CopyBuffer(h9,0,0,1,b9)<=0 || CopyBuffer(h21,0,0,1,b21)<=0 ||
+          CopyBuffer(h50,0,0,1,b50)<=0 || CopyBuffer(h200,0,0,1,b200)<=0)
+         return false;
+
+      bool up  = (b9[0] > b21[0] && b21[0] > b50[0] && b50[0] > b200[0]);
+      bool down= (b9[0] < b21[0] && b21[0] < b50[0] && b50[0] < b200[0]);
+      return (up || down);
+   }
+
+   bool CheckMomentum(const string symbol, ENUM_TIMEFRAMES tf)
+   {
+      double macdMain, macdSig;
+      if (!GetMACD(symbol, tf, 12, 26, 9, macdMain, macdSig))
+         return false;
+      if (macdMain > macdSig && macdMain > 0)
+         return true;
+      if (macdMain < macdSig && macdMain < 0)
+         return true;
+      return false;
+   }
+
+   int CheckTrendDirection(const string symbol, ENUM_TIMEFRAMES tf)
+   {
+      int h9   = GetEMAHandle(symbol, tf, 9);
+      int h21  = GetEMAHandle(symbol, tf, 21);
+      int h50  = GetEMAHandle(symbol, tf, 50);
+      int h200 = GetEMAHandle(symbol, tf, 200);
+      if (h9 == INVALID_HANDLE || h21 == INVALID_HANDLE ||
+          h50 == INVALID_HANDLE || h200 == INVALID_HANDLE)
+         return 0;
+
+      double b9[], b21[], b50[], b200[];
+      ArraySetAsSeries(b9, true);
+      ArraySetAsSeries(b21, true);
+      ArraySetAsSeries(b50, true);
+      ArraySetAsSeries(b200, true);
+
+      if (CopyBuffer(h9,0,0,1,b9)<=0 || CopyBuffer(h21,0,0,1,b21)<=0 ||
+          CopyBuffer(h50,0,0,1,b50)<=0 || CopyBuffer(h200,0,0,1,b200)<=0)
+         return 0;
+
+      if (b9[0] > b21[0] && b21[0] > b50[0] && b50[0] > b200[0])
+         return 1;
+      if (b9[0] < b21[0] && b21[0] < b50[0] && b50[0] < b200[0])
+         return -1;
+      return 0;
+   }
+
    bool IsTrendPhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
    {
+      if (!CheckMovingAveragesAlignment(symbol, tf))
+         return false;
+      if (!CheckMomentum(symbol, tf))
+         return false;
 
-      double ema9 = GetEMA(symbol, tf, EMA_SONIC_PERIOD);
-      double ema20 = GetEMA(symbol, tf, EMA_FAST_PERIOD);
-      double ema50 = GetEMA(symbol, tf, EMA_MEDIUM_PERIOD);
+      int rsiHandle = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
+      if (rsiHandle == INVALID_HANDLE)
+         return false;
 
-      // Avalia a inclinação das EMAs para timeframes muito curtos
-      double slope9  = GetEMASlope(symbol, tf, EMA_SONIC_PERIOD, 3);
-      double slope20 = GetEMASlope(symbol, tf, EMA_FAST_PERIOD, 3);
-      double slopeThr = AdaptiveSlopeThreshold(symbol, tf, 3);
+      double rsiBuf[1];
+      if (CopyBuffer(rsiHandle,0,0,1,rsiBuf)<=0)
+         return false;
 
-      double rsi = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD);
+      double rsi = rsiBuf[0];
+      int dir = CheckTrendDirection(symbol, tf);
+      if (dir > 0 && rsi < 60)
+         return false;
+      if (dir < 0 && rsi > 40)
+         return false;
 
-      double macdMain, macdSig;
-      bool macdOk = GetMACD(symbol, tf, 10, 21, 7, macdMain, macdSig);
-      double point = SymbolInfoDouble(symbol, SYMBOL_POINT); // WIN = 1.0
-
-      double diff9_20 = MathAbs(ema9 - ema20) / point;
-      double diff20_50 = MathAbs(ema20 - ema50) / point;
-
-
-      bool slopeUpOk = true;
-      bool slopeDownOk = true;
-      if (tf == PERIOD_M3)
-      {
-         slopeUpOk = (slope9 > slopeThr && slope20 > slopeThr * 0.5);
-         slopeDownOk = (slope9 < -slopeThr && slope20 < -slopeThr * 0.5);
-      }
-
-      bool upTrendEMAs = (ema9 > ema20 && diff9_20 > rangeThr &&
-                          ema20 > ema50 && diff20_50 > rangeThr && slopeUpOk);
-
-      // MACD: força recente de alta (main acima da signal).
-      // RSI > 60: viés comprador está ativo, mas ainda não em sobrecompra (>70).
-      bool upTrendIndicators = (macdOk && macdMain > macdSig && rsi > 60);
-
-      if (upTrendEMAs && upTrendIndicators)
-      {
-         // Confirmar com OBV
-         bool obvConfirm = CheckOBVTrendConfirmation(symbol, tf, true);
-         bool bollingerConfirm = BollingerTrendConfirm(symbol, tf, true);
-
-         if (obvConfirm && bollingerConfirm)
-         {
-            double obv = GetOBV(symbol, tf, VOLUME_REAL);
-            double obvSma = GetOBVSMA(symbol, tf, 14);
-            desc = "Tendência de Alta: EMAs alinhadas, MACD>signal, RSI=" +
-                   DoubleToString(rsi, 1);
-            if (tf == PERIOD_M3)
-               desc += ", slope=" + DoubleToString(slope9, 2);
-            desc += ", OBV confirmando (" +
-                    DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
-
-            Print("diff9_20 ->>>>>>>>>> " + (string)diff9_20);
-            Print("diff20_50 ->>>>>>>>>> " + (string)diff20_50);
-            Print(desc);
-            return true;
-         }
-      }
-
-      // Verificação de tendência de baixa
-      bool downTrendEMAs = (ema9 < ema20 && diff9_20 > rangeThr &&
-                            ema20 < ema50 && diff20_50 > rangeThr && slopeDownOk);
-      bool downTrendIndicators = (macdOk && macdMain < macdSig && rsi < 40);
-
-      if (downTrendEMAs && downTrendIndicators)
-      {
-         // Confirmar com OBV
-         bool obvConfirm = CheckOBVTrendConfirmation(symbol, tf, false);
-         bool bollingerConfirm = BollingerTrendConfirm(symbol, tf, false);
-
-         if (obvConfirm && bollingerConfirm)
-         {
-            double obv = GetOBV(symbol, tf, VOLUME_REAL);
-            double obvSma = GetOBVSMA(symbol, tf, 14);
-            desc = "Tendência de Baixa: EMAs alinhadas, MACD<signal, RSI=" +
-                   DoubleToString(rsi, 1);
-            if (tf == PERIOD_M3)
-               desc += ", slope=" + DoubleToString(slope9, 2);
-            desc += ", OBV confirmando (" +
-                    DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
-            Print(desc);
-            return true;
-         }
-      }
-      
-      return false;
+      desc = "Trend";
+      if (dir > 0)
+         desc += " up";
+      else if (dir < 0)
+         desc += " down";
+      desc += ", RSI=" + DoubleToString(rsi,1);
+      Print("#####   " + desc + "  #####   ");
+      return true;
    }
-
    bool IsRangePhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
    {
-      double ema20 = GetEMA(symbol, tf, EMA_FAST_PERIOD);
-      double ema50 = GetEMA(symbol, tf, EMA_MEDIUM_PERIOD);
-      double sma200 = GetEMA(symbol, tf, EMA_SLOW_PERIOD);
-      double rsi = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD);
-      double atr = GetATR(symbol, tf, DEFAULT_ATR_PERIOD);
-      double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
-      double diff20_50 = MathAbs(ema20 - ema50) / point;
-      double diff50_200 = MathAbs(ema50 - sma200) / point;
-      bool emaClose = (diff20_50 <= rangeThr && diff50_200 <= rangeThr);
-      bool rsiMid = (rsi >= 40 && rsi <= 60);
-      bool atrLow = (atr / point <= rangeThr);
-      if (emaClose && rsiMid && atrLow)
-      {
-         desc = "EMAs proximas, RSI=" + DoubleToString(rsi, 1) + ", ATR baixo";
-         return true;
-      }
-      return false;
+      int h9   = GetEMAHandle(symbol, tf, 9);
+      int h21  = GetEMAHandle(symbol, tf, 21);
+      int h50  = GetEMAHandle(symbol, tf, 50);
+      int hAtr = GetATRHandle(symbol, tf, DEFAULT_ATR_PERIOD);
+      int hRsi = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
+      if (h9==INVALID_HANDLE || h21==INVALID_HANDLE || h50==INVALID_HANDLE ||
+          hAtr==INVALID_HANDLE || hRsi==INVALID_HANDLE)
+         return false;
+
+      double b9[], b21[], b50[], atrBuf[], rsiBuf[];
+      ArraySetAsSeries(b9,true); ArraySetAsSeries(b21,true); ArraySetAsSeries(b50,true);
+      ArraySetAsSeries(atrBuf,true); ArraySetAsSeries(rsiBuf,true);
+
+      if (CopyBuffer(h9,0,0,3,b9)<=0 || CopyBuffer(h21,0,0,3,b21)<=0 ||
+          CopyBuffer(h50,0,0,3,b50)<=0 || CopyBuffer(hAtr,0,0,1,atrBuf)<=0 ||
+          CopyBuffer(hRsi,0,0,1,rsiBuf)<=0)
+         return false;
+
+      double distance1 = MathAbs(b9[0]-b21[0]);
+      double distance2 = MathAbs(b21[0]-b50[0]);
+      double atr = atrBuf[0];
+      double n1 = distance1 / atr;
+      double n2 = distance2 / atr;
+      if (n1 > 0.5 || n2 > 1.0)
+         return false;
+
+      double rsi = rsiBuf[0];
+      if (rsi < 40 || rsi > 60)
+         return false;
+
+      desc = "Range: RSI=" + DoubleToString(rsi,1);
+      return true;
    }
 
-   bool IsReversalPhase(const string symbol, ENUM_TIMEFRAMES tf, string &desc)
+  bool IsReversalPhase(const string symbol, ENUM_TIMEFRAMES tf, string &desc)
    {
-      double rsi0 = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD, 0);
-      double rsi1 = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD, 1);
-      double price0 = iClose(symbol, tf, 0);
-      double price1 = iClose(symbol, tf, 1);
+      int rsiHandle = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
+      int ema9Handle = GetEMAHandle(symbol, tf, 9);
+      int ema21Handle = GetEMAHandle(symbol, tf, 21);
+      if (rsiHandle == INVALID_HANDLE || ema9Handle == INVALID_HANDLE || ema21Handle == INVALID_HANDLE)
+         return false;
+
+      double rsiBuf[];
+      double closeBuf[];
+      double ema9Buf[];
+      double ema21Buf[];
+      ArrayResize(rsiBuf, 10);
+      ArrayResize(closeBuf, 10);
+      ArrayResize(ema9Buf, 3);
+      ArrayResize(ema21Buf, 3);
+      ArraySetAsSeries(rsiBuf, true);
+      ArraySetAsSeries(closeBuf, true);
+      ArraySetAsSeries(ema9Buf, true);
+      ArraySetAsSeries(ema21Buf, true);
+
+      if (CopyBuffer(rsiHandle, 0, 0, 10, rsiBuf) != 10 ||
+          CopyClose(symbol, tf, 0, 10, closeBuf) != 10 ||
+          CopyBuffer(ema9Handle, 0, 0, 3, ema9Buf) != 3 ||
+          CopyBuffer(ema21Handle, 0, 0, 3, ema21Buf) != 3)
+         return false;
+
+      double rsi0 = rsiBuf[0];
+      double rsi1 = rsiBuf[1];
+      double price0 = closeBuf[0];
+      double price1 = closeBuf[1];
+
       bool bearishDiv = (price0 > price1 && rsi0 < rsi1 && rsi0 > 70);
       bool bullishDiv = (price0 < price1 && rsi0 > rsi1 && rsi0 < 30);
       bool overbought = (rsi0 > 75);
       bool oversold = (rsi0 < 25);
       bool candle = (IsPinbar(symbol, tf) || IsEngulfing(symbol, tf));
+
       if ((bearishDiv && overbought) || (bullishDiv && oversold) || ((overbought || oversold) && candle))
       {
          desc = "Divergencia RSI e candle de reversao";
@@ -215,7 +264,6 @@ private:
       }
       return false;
    }
-
 public:
    /// Analisa apenas um timeframe
    PhaseInfo DetectPhaseSingle(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr = 10.0)

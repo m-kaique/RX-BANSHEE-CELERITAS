@@ -119,6 +119,14 @@ struct OBVHandle
 
 static OBVHandle g_obvHandles[];
 
+/// Simple structure describing a support or resistance zone
+struct SRZone
+{
+   double upper; ///< upper boundary of the zone
+   double lower; ///< lower boundary of the zone
+   SRZone():upper(0.0),lower(0.0){}
+};
+
 /// return cached SMA indicator handle or create a new one
 inline int GetSMAHandle(const string symbol, ENUM_TIMEFRAMES tf, int period)
 {
@@ -1084,6 +1092,19 @@ bool BollingerTrendConfirm(const string symbol, ENUM_TIMEFRAMES tf, bool isUpTre
 }
 
 /// Draw or update support and resistance horizontal lines
+
+inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf,
+                                       const SRZone &supportZone,
+                                       const SRZone &resistanceZone)
+{
+   string suppUpper = "SR_SupportUpper_" + symbol + "_" + EnumToString(tf);
+   string suppLower = "SR_SupportLower_" + symbol + "_" + EnumToString(tf);
+   string resUpper  = "SR_ResistanceUpper_" + symbol + "_" + EnumToString(tf);
+   string resLower  = "SR_ResistanceLower_" + symbol + "_" + EnumToString(tf);
+
+   // Support zone lines
+   if (ObjectFind(0, suppUpper) < 0)
+
 inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf, 
                                        double supportLevel, double resistanceLevel, string codename)
 {
@@ -1092,34 +1113,47 @@ inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf,
    
    // Support line
    if (ObjectFind(0, supportName) < 0)
+
    {
-      ObjectCreate(0, supportName, OBJ_HLINE, 0, 0, supportLevel);
-      ObjectSetInteger(0, supportName, OBJPROP_COLOR, clrBlue);
-      ObjectSetInteger(0, supportName, OBJPROP_STYLE, STYLE_SOLID);
-      ObjectSetInteger(0, supportName, OBJPROP_WIDTH, 2);
-      ObjectSetString(0, supportName, OBJPROP_TEXT, "Support: " + DoubleToString(supportLevel, _Digits));
+      ObjectCreate(0, suppUpper, OBJ_HLINE, 0, 0, supportZone.upper);
+      ObjectSetInteger(0, suppUpper, OBJPROP_COLOR, clrBlue);
+      ObjectSetInteger(0, suppUpper, OBJPROP_STYLE, STYLE_DOT);
+      ObjectSetInteger(0, suppUpper, OBJPROP_WIDTH, 1);
    }
    else
+      ObjectSetDouble(0, suppUpper, OBJPROP_PRICE, supportZone.upper);
+
+   if (ObjectFind(0, suppLower) < 0)
    {
-      ObjectSetDouble(0, supportName, OBJPROP_PRICE, supportLevel);
-      ObjectSetString(0, supportName, OBJPROP_TEXT, "Support: " + DoubleToString(supportLevel, _Digits));
-   }
-   
-   // Resistance line
-   if (ObjectFind(0, resistanceName) < 0)
-   {
-      ObjectCreate(0, resistanceName, OBJ_HLINE, 0, 0, resistanceLevel);
-      ObjectSetInteger(0, resistanceName, OBJPROP_COLOR, clrRed);
-      ObjectSetInteger(0, resistanceName, OBJPROP_STYLE, STYLE_SOLID);
-      ObjectSetInteger(0, resistanceName, OBJPROP_WIDTH, 2);
-      ObjectSetString(0, resistanceName, OBJPROP_TEXT, "Resistance: " + DoubleToString(resistanceLevel, _Digits));
+      ObjectCreate(0, suppLower, OBJ_HLINE, 0, 0, supportZone.lower);
+      ObjectSetInteger(0, suppLower, OBJPROP_COLOR, clrBlue);
+      ObjectSetInteger(0, suppLower, OBJPROP_STYLE, STYLE_SOLID);
+      ObjectSetInteger(0, suppLower, OBJPROP_WIDTH, 2);
    }
    else
+      ObjectSetDouble(0, suppLower, OBJPROP_PRICE, supportZone.lower);
+
+   // Resistance zone lines
+   if (ObjectFind(0, resUpper) < 0)
    {
-      ObjectSetDouble(0, resistanceName, OBJPROP_PRICE, resistanceLevel);
-      ObjectSetString(0, resistanceName, OBJPROP_TEXT, "Resistance: " + DoubleToString(resistanceLevel, _Digits));
+      ObjectCreate(0, resUpper, OBJ_HLINE, 0, 0, resistanceZone.upper);
+      ObjectSetInteger(0, resUpper, OBJPROP_COLOR, clrRed);
+      ObjectSetInteger(0, resUpper, OBJPROP_STYLE, STYLE_SOLID);
+      ObjectSetInteger(0, resUpper, OBJPROP_WIDTH, 2);
    }
-   
+   else
+      ObjectSetDouble(0, resUpper, OBJPROP_PRICE, resistanceZone.upper);
+
+   if (ObjectFind(0, resLower) < 0)
+   {
+      ObjectCreate(0, resLower, OBJ_HLINE, 0, 0, resistanceZone.lower);
+      ObjectSetInteger(0, resLower, OBJPROP_COLOR, clrRed);
+      ObjectSetInteger(0, resLower, OBJPROP_STYLE, STYLE_DOT);
+      ObjectSetInteger(0, resLower, OBJPROP_WIDTH, 1);
+   }
+   else
+      ObjectSetDouble(0, resLower, OBJPROP_PRICE, resistanceZone.lower);
+
    ChartRedraw(0);
 }
 #endif // INTEGRATEDPA_UTILS_MQH

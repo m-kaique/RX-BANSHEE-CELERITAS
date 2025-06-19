@@ -60,7 +60,8 @@ public:
          s.direction=SIGNAL_BUY;
          s.phase=PHASE_RANGE;
          s.entry=entry;
-         double stop  = ctx.FindNearestSupport(symbol,tf,lvlLook);
+         SRZone sZone = ctx.FindNearestSupport(symbol,tf,lvlLook);
+         double stop  = sZone.lower;
          if(stop<=0.0) stop = m_low - range*0.2;
          double target= m_high;               // aim for opposite extreme
          s.stop = stop;
@@ -74,7 +75,8 @@ public:
          s.direction=SIGNAL_SELL;
          s.phase=PHASE_RANGE;
          s.entry=entry;
-         double stop  = ctx.FindNearestResistance(symbol,tf,lvlLook);
+         SRZone rZone = ctx.FindNearestResistance(symbol,tf,lvlLook);
+         double stop  = rZone.upper;
          if(stop<=0.0) stop = m_high + range*0.2;
          double target= m_low;
          s.stop = stop;

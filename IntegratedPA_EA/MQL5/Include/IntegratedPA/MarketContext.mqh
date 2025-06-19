@@ -180,6 +180,7 @@ private:
       else if (dir < 0)
          desc += " down";
       desc += ", RSI=" + DoubleToString(rsi,1);
+      Print("#####   " + desc + "  #####   ");
       return true;
    }
    bool IsRangePhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
@@ -218,40 +219,51 @@ private:
       return true;
    }
 
-   bool IsReversalPhase(const string symbol, ENUM_TIMEFRAMES tf, string &desc)
+  bool IsReversalPhase(const string symbol, ENUM_TIMEFRAMES tf, string &desc)
    {
-      int hRsi = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
-      int hEma9 = GetEMAHandle(symbol, tf, 9);
-      int hEma21= GetEMAHandle(symbol, tf, 21);
-      if (hRsi==INVALID_HANDLE || hEma9==INVALID_HANDLE || hEma21==INVALID_HANDLE)
+      int rsiHandle = GetRSIHandle(symbol, tf, DEFAULT_RSI_PERIOD);
+      int ema9Handle = GetEMAHandle(symbol, tf, 9);
+      int ema21Handle = GetEMAHandle(symbol, tf, 21);
+      if (rsiHandle == INVALID_HANDLE || ema9Handle == INVALID_HANDLE || ema21Handle == INVALID_HANDLE)
          return false;
 
-      double rsiBuf[10], closeBuf[10];
-      ArraySetAsSeries(rsiBuf,true); ArraySetAsSeries(closeBuf,true);
-      if (CopyBuffer(hRsi,0,0,10,rsiBuf)<=0 || CopyClose(symbol, tf, 0, 10, closeBuf)<=0)
+      double rsiBuf[];
+      double closeBuf[];
+      double ema9Buf[];
+      double ema21Buf[];
+      ArrayResize(rsiBuf, 10);
+      ArrayResize(closeBuf, 10);
+      ArrayResize(ema9Buf, 3);
+      ArrayResize(ema21Buf, 3);
+      ArraySetAsSeries(rsiBuf, true);
+      ArraySetAsSeries(closeBuf, true);
+      ArraySetAsSeries(ema9Buf, true);
+      ArraySetAsSeries(ema21Buf, true);
+
+      if (CopyBuffer(rsiHandle, 0, 0, 10, rsiBuf) != 10 ||
+          CopyClose(symbol, tf, 0, 10, closeBuf) != 10 ||
+          CopyBuffer(ema9Handle, 0, 0, 3, ema9Buf) != 3 ||
+          CopyBuffer(ema21Handle, 0, 0, 3, ema21Buf) != 3)
          return false;
 
-      bool bullishDiv = (closeBuf[0] < closeBuf[5] && rsiBuf[0] > rsiBuf[5]);
-      bool bearishDiv = (closeBuf[0] > closeBuf[5] && rsiBuf[0] < rsiBuf[5]);
-      bool oversold = rsiBuf[0] < 30;
-      bool overbought = rsiBuf[0] > 70;
+      double rsi0 = rsiBuf[0];
+      double rsi1 = rsiBuf[1];
+      double price0 = closeBuf[0];
+      double price1 = closeBuf[1];
 
-      double ema9Buf[3], ema21Buf[3];
-      ArraySetAsSeries(ema9Buf,true); ArraySetAsSeries(ema21Buf,true);
-      if (CopyBuffer(hEma9,0,0,3,ema9Buf)<=0 || CopyBuffer(hEma21,0,0,3,ema21Buf)<=0)
-         return false;
+      bool bearishDiv = (price0 > price1 && rsi0 < rsi1 && rsi0 > 70);
+      bool bullishDiv = (price0 < price1 && rsi0 > rsi1 && rsi0 < 30);
+      bool overbought = (rsi0 > 75);
+      bool oversold = (rsi0 < 25);
+      bool candle = (IsPinbar(symbol, tf) || IsEngulfing(symbol, tf));
 
-      bool crossUp = ema9Buf[1] < ema21Buf[1] && ema9Buf[0] > ema21Buf[0];
-      bool crossDown = ema9Buf[1] > ema21Buf[1] && ema9Buf[0] < ema21Buf[0];
-
-      if ((bullishDiv && oversold) || (bearishDiv && overbought) || crossUp || crossDown)
+      if ((bearishDiv && overbought) || (bullishDiv && oversold) || ((overbought || oversold) && candle))
       {
-         desc = "Reversal setup";
+         desc = "Divergencia RSI e candle de reversao";
          return true;
       }
       return false;
    }
-
 public:
    /// Analisa apenas um timeframe
    PhaseInfo DetectPhaseSingle(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr = 10.0)

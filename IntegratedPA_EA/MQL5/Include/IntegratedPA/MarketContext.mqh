@@ -294,6 +294,64 @@ public:
       arr[1] = ctxTf;
       return DetectPhaseMTF(symbol, arr, 2, rangeThr).phase;
    }
+
+   /// Encontra o suporte mais próximo ao preco informado
+   double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf, double price,
+                             int lookbackBars = 50)
+   {
+      if (!EnsureHistory(symbol, tf, lookbackBars))
+         return 0.0;
+
+      double lows[];
+      ArraySetAsSeries(lows, true);
+      if (CopyLow(symbol, tf, 0, lookbackBars, lows) != lookbackBars)
+         return 0.0;
+
+      double support = 0.0;
+      double minDist = DBL_MAX;
+      for (int i = 2; i < lookbackBars - 2; i++)
+      {
+         if (lows[i] < lows[i - 1] && lows[i] < lows[i - 2] &&
+             lows[i] < lows[i + 1] && lows[i] < lows[i + 2])
+         {
+            if (lows[i] < price && price - lows[i] < minDist)
+            {
+               minDist = price - lows[i];
+               support = lows[i];
+            }
+         }
+      }
+      return support;
+   }
+
+   /// Encontra a resistência mais próxima ao preco informado
+   double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf, double price,
+                                int lookbackBars = 50)
+   {
+      if (!EnsureHistory(symbol, tf, lookbackBars))
+         return 0.0;
+
+      double highs[];
+      ArraySetAsSeries(highs, true);
+      if (CopyHigh(symbol, tf, 0, lookbackBars, highs) != lookbackBars)
+         return 0.0;
+
+      double resistance = 0.0;
+      double minDist = DBL_MAX;
+      for (int i = 2; i < lookbackBars - 2; i++)
+      {
+         if (highs[i] > highs[i - 1] && highs[i] > highs[i - 2] &&
+             highs[i] > highs[i + 1] && highs[i] > highs[i + 2])
+         {
+            if (highs[i] > price && highs[i] - price < minDist)
+            {
+               minDist = highs[i] - price;
+               resistance = highs[i];
+            }
+         }
+      }
+      return resistance;
+   }
 };
 
 // compatibilidade com nome antigo

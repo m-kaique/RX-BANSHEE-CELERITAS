@@ -174,20 +174,30 @@ private:
          return false;
 
 
+
       SRZone near_supp = FindNearestSupport(_Symbol, PERIOD_M3, 50);
       SRZone near_ress = FindNearestResistance(_Symbol, PERIOD_M3, 50);
       DrawSupportResistanceLines(_Symbol, PERIOD_M3, near_supp, near_ress);
+
+      double nx_supp = GetSupportLevel(_Symbol, PERIOD_M3, 50);
+      double nx_ress = GetResistanceLevel(_Symbol, PERIOD_M3, 50);
+      DrawSupportResistanceLines(_Symbol,PERIOD_M3,nx_supp, nx_ress, "nx");
+
       desc = "Trend";
       if (dir > 0)
          desc += " up";
       else if (dir < 0)
          desc += " down";
       desc += ", RSI=" + DoubleToString(rsi, 1);
+
       Print("Near Supp: "+DoubleToString(near_supp.lower, _Digits)+ "-"+
             DoubleToString(near_supp.upper, _Digits)+
             " , Near Ress: " +
             DoubleToString(near_ress.lower, _Digits)+ "-"+
             DoubleToString(near_ress.upper, _Digits));
+
+      Print("Near Supp: "+string(nx_supp)+ " , Near Ress: " + (string)nx_ress);
+
       Print("#####   " + desc + "  #####   ");
       return true;
    }
@@ -278,6 +288,7 @@ private:
    }
 
 public:
+
    /// Find nearest support zone below the current price
    SRZone FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
                              int lookback)
@@ -377,6 +388,8 @@ public:
       zone.lower = avg - tol;
       return zone;
    }
+
+
 
    /// Analisa apenas um timeframe
    PhaseInfo DetectPhaseSingle(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr = 10.0)

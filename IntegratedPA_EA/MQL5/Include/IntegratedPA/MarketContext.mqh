@@ -249,40 +249,17 @@ public:
          info.desc = "condicoes neutras";
       }
 
-      // adiciona niveis de suporte macro 4H
-      double price = iClose(symbol, PERIOD_H4, 1);
-      double sup = FindNearestSupport(symbol, PERIOD_H4, price);
-      double res = FindNearestResistance(symbol, PERIOD_H4, price);
-      int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-
-      // adiciona niveis de suporte macro 1H
-      double price_h1 = iClose(symbol, PERIOD_H1, 1);
-      double sup_h1 = FindNearestSupport(symbol, PERIOD_H1, price_h1);
-      double res_h1 = FindNearestResistance(symbol, PERIOD_H1, price_h1);
-      int digits_h1 = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-
-      // adiciona niveis de suporte macro 30 min
-      double price_m30 = iClose(symbol, PERIOD_M30, 1);
-      double sup_m30 = FindNearestSupport(symbol, PERIOD_M30, price_m30);
-      double res_m30 = FindNearestResistance(symbol, PERIOD_M30, price_m30);
-      int digits_m30 = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-
-      // adiciona niveis de suporte macro 15 min micro
-      double price_m15 = iClose(symbol, PERIOD_M15, 1);
-      double sup_m15 = FindNearestSupport(symbol, PERIOD_M15, price_m15);
-      double res_m15 = FindNearestResistance(symbol, PERIOD_M15, price_m15);
-      int digits_m15 = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-
-      DrawSupportResistanceLines(symbol, PERIOD_H4, sup, res, "ctx_macro");
-      DrawSupportResistanceLines(symbol, PERIOD_H1, sup_h1, res_h1, "ctx_alto");
-      DrawSupportResistanceLines(symbol, PERIOD_M30, sup_m30, res_m30, "ctx_médio");
-      DrawSupportResistanceLines(symbol, PERIOD_M15, sup_m15, res_m15, "ctx_micro");
+      // suporte e resistencia em varios timeframes
+      SRLevels sr_macro = ComputeAndDrawSR(symbol, PERIOD_H4, "ctx_macro");
+      ComputeAndDrawSR(symbol, PERIOD_H1, "ctx_alto");
+      ComputeAndDrawSR(symbol, PERIOD_M30, "ctx_médio");
+      ComputeAndDrawSR(symbol, PERIOD_M15, "ctx_micro");
 
 
-      if (sup > 0.0)
-         info.desc += " S:" + DoubleToString(sup, digits);
-      if (res > 0.0)
-         info.desc += " R:" + DoubleToString(res, digits);
+      if (sr_macro.support > 0.0)
+         info.desc += " S:" + DoubleToString(sr_macro.support, sr_macro.digits);
+      if (sr_macro.resistance > 0.0)
+         info.desc += " R:" + DoubleToString(sr_macro.resistance, sr_macro.digits);
 
       return info;
    }

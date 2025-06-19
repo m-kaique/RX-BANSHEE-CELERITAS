@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_RANGEBREAKOUT_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class RangeBreakout
 {
@@ -68,13 +69,16 @@ public:
       double range=m_high-m_low;
       double entry=iClose(symbol,tf,1);
       double stop, target;
+      MarketContextAnalyzer ctx;
+      const int lvlLook=50;
       if(m_buySignal)
       {
          s.valid=true;
          s.direction=SIGNAL_BUY;
          s.phase=PHASE_RANGE;
          s.entry=entry;
-         stop   = m_high - range*0.2;   // stop below breakout level
+         stop   = ctx.FindNearestSupport(symbol,tf,lvlLook);
+         if(stop<=0.0) stop = m_high - range*0.2;   // fallback
          target = entry + range;        // projected range
          s.stop = stop;
          s.target = target;
@@ -87,7 +91,8 @@ public:
          s.direction=SIGNAL_SELL;
          s.phase=PHASE_RANGE;
          s.entry=entry;
-         stop   = m_low + range*0.2;
+         stop   = ctx.FindNearestResistance(symbol,tf,lvlLook);
+         if(stop<=0.0) stop   = m_low + range*0.2;
          target = entry - range;
          s.stop = stop;
          s.target = target;

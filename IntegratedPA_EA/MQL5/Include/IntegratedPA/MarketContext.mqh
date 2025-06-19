@@ -263,8 +263,70 @@ private:
          return true;
       }
       return false;
-   }
+  }
 public:
+   /// Find nearest support level below the current price
+   double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
+                             int lookback=50)
+   {
+      if(!EnsureHistory(symbol, tf, lookback+1))
+         return 0.0;
+      double lows[];
+      ArraySetAsSeries(lows,true);
+      if(CopyLow(symbol, tf, 1, lookback, lows)!=lookback)
+         return 0.0;
+      double price=iClose(symbol, tf, 0);
+      double level=0.0;
+      bool found=false;
+      for(int i=0;i<lookback;i++)
+      {
+         double l=lows[i];
+         if(l<price)
+         {
+            if(!found || l>level)
+            {
+               level=l;
+               found=true;
+            }
+         }
+      }
+      if(found)
+         return level;
+      int idx=ArrayMinimum(lows);
+      return lows[idx];
+   }
+
+   /// Find nearest resistance level above the current price
+   double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
+                                int lookback=50)
+   {
+      if(!EnsureHistory(symbol, tf, lookback+1))
+         return 0.0;
+      double highs[];
+      ArraySetAsSeries(highs,true);
+      if(CopyHigh(symbol, tf, 1, lookback, highs)!=lookback)
+         return 0.0;
+      double price=iClose(symbol, tf, 0);
+      double level=0.0;
+      bool found=false;
+      for(int i=0;i<lookback;i++)
+      {
+         double h=highs[i];
+         if(h>price)
+         {
+            if(!found || h<level)
+            {
+               level=h;
+               found=true;
+            }
+         }
+      }
+      if(found)
+         return level;
+      int idx=ArrayMaximum(highs);
+      return highs[idx];
+   }
+
    /// Analisa apenas um timeframe
    PhaseInfo DetectPhaseSingle(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr = 10.0)
    {

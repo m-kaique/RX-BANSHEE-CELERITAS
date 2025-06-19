@@ -1,6 +1,7 @@
 #ifndef INTEGRATEDPA_RANGEFADE_MQH
 #define INTEGRATEDPA_RANGEFADE_MQH
 #include "../Defs.mqh"
+#include "../MarketContext.mqh"
 
 class RangeFade
 {
@@ -51,13 +52,16 @@ public:
 
       double range=m_high-m_low;
       double entry=iClose(symbol,tf,1);
+      MarketContextAnalyzer ctx;
+      const int lvlLook=50;
       if(m_buySignal)
       {
          s.valid=true;
          s.direction=SIGNAL_BUY;
          s.phase=PHASE_RANGE;
          s.entry=entry;
-         double stop  = m_low - range*0.2;     // stop beyond range
+         double stop  = ctx.FindNearestSupport(symbol,tf,lvlLook);
+         if(stop<=0.0) stop = m_low - range*0.2;
          double target= m_high;               // aim for opposite extreme
          s.stop = stop;
          s.target = target;
@@ -70,7 +74,8 @@ public:
          s.direction=SIGNAL_SELL;
          s.phase=PHASE_RANGE;
          s.entry=entry;
-         double stop  = m_high + range*0.2;
+         double stop  = ctx.FindNearestResistance(symbol,tf,lvlLook);
+         if(stop<=0.0) stop = m_high + range*0.2;
          double target= m_low;
          s.stop = stop;
          s.target = target;

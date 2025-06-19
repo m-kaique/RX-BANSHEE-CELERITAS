@@ -83,6 +83,50 @@ private:
       return false;
    }
 
+   // Confirma tendencia do timeframe inferior usando um timeframe maior
+   bool ConfirmHigherTFTrend(const string symbol,
+                             ENUM_TIMEFRAMES lowerTf,
+                             ENUM_TIMEFRAMES higherTf)
+   {
+      double ema9L  = GetEMA(symbol, lowerTf, EMA_SONIC_PERIOD);
+      double ema20L = GetEMA(symbol, lowerTf, EMA_FAST_PERIOD);
+      double ema50L = GetEMA(symbol, lowerTf, EMA_MEDIUM_PERIOD);
+      double slopeL = GetEMASlope(symbol, lowerTf, EMA_SONIC_PERIOD, 3);
+
+      bool upLower   = (ema9L > ema20L && ema20L > ema50L && slopeL > 0);
+      bool downLower = (ema9L < ema20L && ema20L < ema50L && slopeL < 0);
+      if (!upLower && !downLower)
+         return false;
+
+      double ema9H  = GetEMA(symbol, higherTf, EMA_SONIC_PERIOD);
+      double ema20H = GetEMA(symbol, higherTf, EMA_FAST_PERIOD);
+      double ema50H = GetEMA(symbol, higherTf, EMA_MEDIUM_PERIOD);
+      double slopeH = GetEMASlope(symbol, higherTf, EMA_SONIC_PERIOD, 3);
+
+      bool upHigher   = (ema9H > ema20H && ema20H > ema50H && slopeH > 0);
+      bool downHigher = (ema9H < ema20H && ema20H < ema50H && slopeH < 0);
+
+      if ((upLower && !upHigher) || (downLower && !downHigher))
+         return false;
+
+      const int lookback = 20;
+      int idxHigh = iHighest(symbol, higherTf, MODE_HIGH, lookback, 1);
+      int idxLow  = iLowest(symbol, higherTf, MODE_LOW,  lookback, 1);
+      if (idxHigh == -1 || idxLow == -1)
+         return false;
+
+      double highLevel = iHigh(symbol, higherTf, idxHigh);
+      double lowLevel  = iLow(symbol, higherTf, idxLow);
+      double close1    = iClose(symbol, higherTf, 1);
+
+      if (upLower && close1 <= highLevel)
+         return false;
+      if (downLower && close1 >= lowLevel)
+         return false;
+
+      return true;
+   }
+
    //================================================================================
    // Modificações para MarketContext.mqh - Função IsTrendPhase() otimizada
    //================================================================================
@@ -114,6 +158,11 @@ private:
       {
          slopeUpOk = (slope9 > slopeThr && slope20 > slopeThr * 0.5);
          slopeDownOk = (slope9 < -slopeThr && slope20 < -slopeThr * 0.5);
+
+         bool higherOk = ConfirmHigherTFTrend(symbol, tf, MarketContextTimeframes[0]) &&
+                          ConfirmHigherTFTrend(symbol, tf, MarketContextTimeframes[2]);
+         if (!higherOk)
+            return false;
       }
 
       bool upTrendEMAs = (ema9 > ema20 && diff9_20 > rangeThr &&

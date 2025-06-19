@@ -1085,10 +1085,10 @@ bool BollingerTrendConfirm(const string symbol, ENUM_TIMEFRAMES tf, bool isUpTre
 
 /// Draw or update support and resistance horizontal lines
 inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf, 
-                                       double supportLevel, double resistanceLevel)
+                                       double supportLevel, double resistanceLevel, string codename)
 {
-   string supportName = "SR_Support_" + symbol + "_" + EnumToString(tf);
-   string resistanceName = "SR_Resistance_" + symbol + "_" + EnumToString(tf);
+   string supportName = codename + "SR_Support_" + symbol + "_" + EnumToString(tf);
+   string resistanceName = codename + "SR_Resistance_" + symbol + "_" + EnumToString(tf);
    
    // Support line
    if (ObjectFind(0, supportName) < 0)

@@ -173,17 +173,16 @@ private:
       if (dir < 0 && rsi > 40)
          return false;
 
-
-      double near_supp = FindNearestSupport(_Symbol, PERIOD_M3, 50);
-      double near_ress = FindNearestResistance(_Symbol, PERIOD_M3, 50);
-      DrawSupportResistanceLines(_Symbol,PERIOD_M3,near_supp, near_ress);
+      double nx_supp = GetSupportLevel(_Symbol, PERIOD_M3, 50);
+      double nx_ress = GetResistanceLevel(_Symbol, PERIOD_M3, 50);
+      DrawSupportResistanceLines(_Symbol,PERIOD_M3,nx_supp, nx_ress, "nx");
       desc = "Trend";
       if (dir > 0)
          desc += " up";
       else if (dir < 0)
          desc += " down";
       desc += ", RSI=" + DoubleToString(rsi, 1);
-      Print("Near Supp: "+string(near_supp)+ " , Near Ress: " + (string)near_ress);
+      Print("Near Supp: "+string(nx_supp)+ " , Near Ress: " + (string)nx_ress);
       Print("#####   " + desc + "  #####   ");
       return true;
    }
@@ -274,68 +273,6 @@ private:
    }
 
 public:
-   /// Find nearest support level below the current price
-   double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
-                             int lookback)
-   {
-      if (!EnsureHistory(symbol, tf, lookback + 1))
-         return 0.0;
-      double lows[];
-      ArraySetAsSeries(lows, true);
-      if (CopyLow(symbol, tf, 1, lookback, lows) != lookback)
-         return 0.0;
-      double price = iClose(symbol, tf, 0);
-      double level = 0.0;
-      bool found = false;
-      for (int i = 0; i < lookback; i++)
-      {
-         double l = lows[i];
-         if (l < price)
-         {
-            if (!found || l > level)
-            {
-               level = l;
-               found = true;
-            }
-         }
-      }
-      if (found)
-         return level;
-      int idx = ArrayMinimum(lows);
-      return lows[idx];
-   }
-
-   /// Find nearest resistance level above the current price
-   double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
-                                int lookback)
-   {
-      if (!EnsureHistory(symbol, tf, lookback + 1))
-         return 0.0;
-      double highs[];
-      ArraySetAsSeries(highs, true);
-      if (CopyHigh(symbol, tf, 1, lookback, highs) != lookback)
-         return 0.0;
-      double price = iClose(symbol, tf, 0);
-      double level = 0.0;
-      bool found = false;
-      for (int i = 0; i < lookback; i++)
-      {
-         double h = highs[i];
-         if (h > price)
-         {
-            if (!found || h < level)
-            {
-               level = h;
-               found = true;
-            }
-         }
-      }
-      if (found)
-         return level;
-      int idx = ArrayMaximum(highs);
-      return highs[idx];
-   }
-
    /// Analisa apenas um timeframe
    PhaseInfo DetectPhaseSingle(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr = 10.0)
    {

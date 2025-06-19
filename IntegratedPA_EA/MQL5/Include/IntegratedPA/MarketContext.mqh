@@ -101,13 +101,12 @@ private:
       double rsi = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD);
 
       double macdMain, macdSig;
-      bool macdOk = GetMACD(symbol, tf, 12, 26, 9, macdMain, macdSig);
+      bool macdOk = GetMACD(symbol, tf, 10, 21, 7, macdMain, macdSig);
       double point = SymbolInfoDouble(symbol, SYMBOL_POINT); // WIN = 1.0
 
       double diff9_20 = MathAbs(ema9 - ema20) / point;
       double diff20_50 = MathAbs(ema20 - ema50) / point;
-      Print("diff9_20 ->>>>>>>>>> " + (string)diff9_20);
-      Print("diff20_50 ->>>>>>>>>> " + (string)diff20_50);
+
 
       bool slopeUpOk = true;
       bool slopeDownOk = true;
@@ -141,6 +140,8 @@ private:
             desc += ", OBV confirmando (" +
                     DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
 
+            Print("diff9_20 ->>>>>>>>>> " + (string)diff9_20);
+            Print("diff20_50 ->>>>>>>>>> " + (string)diff20_50);
             Print(desc);
             return true;
          }

@@ -76,16 +76,14 @@ bool SetupIndicators()
    {
 
       string symbol = g_assets[i].symbol;
+
       SymbolSelect(symbol, true);
       GetEMAHandle(symbol, MainTimeframe, 9);
       GetEMAHandle(symbol, MainTimeframe, 20);
       GetEMAHandle(symbol, MainTimeframe, 50);
       GetEMAHandle(symbol, MainTimeframe, 200);
-      GetEMAHandle(symbol, g_assets[i].ctxTf, 20); // context timeframe EMAs
-      GetEMAHandle(symbol, g_assets[i].ctxTf, 50);
-      GetEMAHandle(symbol, g_assets[i].ctxTf, 200);
+      
       // médias do diário para definição de viés pré-mercado
-
       GetEMAHandle(symbol, PERIOD_D1, 20);
       GetEMAHandle(symbol, PERIOD_D1, 50);
       GetSMAHandle(symbol, PERIOD_D1, 200);

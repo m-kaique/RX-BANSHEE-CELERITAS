@@ -115,4 +115,12 @@ struct SessionRange
    int end;   ///< minutos desde 00:00
 };
 
+// Lista de timeframes para configurar os indicadores
+ENUM_TIMEFRAMES MarketContextTimeframes[] = {
+   PERIOD_M15,  // 15 minutos
+   PERIOD_M30,  // 30 minutos
+   PERIOD_H1,   // 1 hora
+   PERIOD_H4,   // 4 horas
+};
+
 #endif // INTEGRATEDPA_DEFS_MQH

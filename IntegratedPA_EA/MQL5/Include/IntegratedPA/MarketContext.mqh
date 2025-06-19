@@ -174,16 +174,20 @@ private:
          return false;
 
 
-      double near_supp = FindNearestSupport(_Symbol, PERIOD_M3, 50);
-      double near_ress = FindNearestResistance(_Symbol, PERIOD_M3, 50);
-      DrawSupportResistanceLines(_Symbol,PERIOD_M3,near_supp, near_ress);
+      SRZone near_supp = FindNearestSupport(_Symbol, PERIOD_M3, 50);
+      SRZone near_ress = FindNearestResistance(_Symbol, PERIOD_M3, 50);
+      DrawSupportResistanceLines(_Symbol, PERIOD_M3, near_supp, near_ress);
       desc = "Trend";
       if (dir > 0)
          desc += " up";
       else if (dir < 0)
          desc += " down";
       desc += ", RSI=" + DoubleToString(rsi, 1);
-      Print("Near Supp: "+string(near_supp)+ " , Near Ress: " + (string)near_ress);
+      Print("Near Supp: "+DoubleToString(near_supp.lower, _Digits)+ "-"+
+            DoubleToString(near_supp.upper, _Digits)+
+            " , Near Ress: " +
+            DoubleToString(near_ress.lower, _Digits)+ "-"+
+            DoubleToString(near_ress.upper, _Digits));
       Print("#####   " + desc + "  #####   ");
       return true;
    }
@@ -274,66 +278,104 @@ private:
    }
 
 public:
-   /// Find nearest support level below the current price
-   double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
+   /// Find nearest support zone below the current price
+   SRZone FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf,
                              int lookback)
    {
+      SRZone zone;
       if (!EnsureHistory(symbol, tf, lookback + 1))
-         return 0.0;
+         return zone;
       double lows[];
       ArraySetAsSeries(lows, true);
       if (CopyLow(symbol, tf, 1, lookback, lows) != lookback)
-         return 0.0;
+         return zone;
       double price = iClose(symbol, tf, 0);
       double level = 0.0;
       bool found = false;
-      for (int i = 0; i < lookback; i++)
+      double pivots[3];
+      int pcount = 0;
+      for (int i = 1; i < lookback - 1 && pcount < 3; i++)
       {
-         double l = lows[i];
-         if (l < price)
+         double prev = iLow(symbol, tf, i + 1);
+         double curr = iLow(symbol, tf, i);
+         double next = iLow(symbol, tf, i - 1);
+         if (curr <= prev && curr <= next && curr < price)
          {
-            if (!found || l > level)
+            pivots[pcount++] = curr;
+            if (!found || curr > level)
             {
-               level = l;
+               level = curr;
                found = true;
             }
          }
       }
-      if (found)
-         return level;
-      int idx = ArrayMinimum(lows);
-      return lows[idx];
+      if (!found)
+      {
+         int idx = ArrayMinimum(lows);
+         level = lows[idx];
+         pivots[0] = level;
+         pcount = 1;
+      }
+      double avg = 0.0;
+      for (int j = 0; j < pcount; j++)
+         avg += pivots[j];
+      avg /= pcount;
+      double tol = GetATR(symbol, tf, 14) * 0.25;
+      if (tol <= 0.0)
+         tol = SymbolInfoDouble(symbol, SYMBOL_POINT) * 10;
+      zone.upper = avg + tol;
+      zone.lower = avg - tol;
+      return zone;
    }
 
-   /// Find nearest resistance level above the current price
-   double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
+   /// Find nearest resistance zone above the current price
+   SRZone FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf,
                                 int lookback)
    {
+      SRZone zone;
       if (!EnsureHistory(symbol, tf, lookback + 1))
-         return 0.0;
+         return zone;
       double highs[];
       ArraySetAsSeries(highs, true);
       if (CopyHigh(symbol, tf, 1, lookback, highs) != lookback)
-         return 0.0;
+         return zone;
       double price = iClose(symbol, tf, 0);
       double level = 0.0;
       bool found = false;
-      for (int i = 0; i < lookback; i++)
+      double pivots[3];
+      int pcount = 0;
+      for (int i = 1; i < lookback - 1 && pcount < 3; i++)
       {
-         double h = highs[i];
-         if (h > price)
+         double prev = iHigh(symbol, tf, i + 1);
+         double curr = iHigh(symbol, tf, i);
+         double next = iHigh(symbol, tf, i - 1);
+         if (curr >= prev && curr >= next && curr > price)
          {
-            if (!found || h < level)
+            pivots[pcount++] = curr;
+            if (!found || curr < level)
             {
-               level = h;
+               level = curr;
                found = true;
             }
          }
       }
-      if (found)
-         return level;
-      int idx = ArrayMaximum(highs);
-      return highs[idx];
+      if (!found)
+      {
+         int idx = ArrayMaximum(highs);
+         level = highs[idx];
+         pivots[0] = level;
+         pcount = 1;
+      }
+      double avg = 0.0;
+      for (int j = 0; j < pcount; j++)
+         avg += pivots[j];
+      avg /= pcount;
+      double tol = GetATR(symbol, tf, 14) * 0.25;
+      if (tol <= 0.0)
+         tol = SymbolInfoDouble(symbol, SYMBOL_POINT) * 10;
+      zone.upper = avg + tol;
+      zone.lower = avg - tol;
+      return zone;
    }
 
    /// Analisa apenas um timeframe

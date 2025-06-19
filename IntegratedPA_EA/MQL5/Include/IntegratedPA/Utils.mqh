@@ -1019,6 +1019,77 @@ bool BollingerTrendConfirm(const string symbol, ENUM_TIMEFRAMES tf, bool isUpTre
       return (close < middle[0] && (close - lower[0]) <= range * 0.2);
 }
 
+/// estrutura simples para armazenar niveis de suporte/resistencia
+struct SRLevels
+{
+   double support;
+   double resistance;
+   int    digits;
+};
+
+/// calcula e plota linhas de suporte/resistencia para um timeframe
+inline SRLevels ComputeAndDrawSR(const string symbol, ENUM_TIMEFRAMES tf,
+                                const string codename, int lookbackBars = 50)
+{
+   SRLevels out;
+   out.digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+
+   double price = iClose(symbol, tf, 1);
+
+   // localizar suporte
+   double lows[];
+   ArraySetAsSeries(lows, true);
+   if (CopyLow(symbol, tf, 0, lookbackBars, lows) == lookbackBars)
+   {
+      out.support = 0.0;
+      double minDist = DBL_MAX;
+      for (int i = 2; i < lookbackBars - 2; i++)
+      {
+         if (lows[i] < lows[i - 1] && lows[i] < lows[i - 2] &&
+             lows[i] < lows[i + 1] && lows[i] < lows[i + 2])
+         {
+            if (lows[i] < price && price - lows[i] < minDist)
+            {
+               minDist = price - lows[i];
+               out.support = lows[i];
+            }
+         }
+      }
+   }
+   else
+   {
+      out.support = 0.0;
+   }
+
+   // localizar resistencia
+   double highs[];
+   ArraySetAsSeries(highs, true);
+   if (CopyHigh(symbol, tf, 0, lookbackBars, highs) == lookbackBars)
+   {
+      out.resistance = 0.0;
+      double minDist = DBL_MAX;
+      for (int i = 2; i < lookbackBars - 2; i++)
+      {
+         if (highs[i] > highs[i - 1] && highs[i] > highs[i - 2] &&
+             highs[i] > highs[i + 1] && highs[i] > highs[i + 2])
+         {
+            if (highs[i] > price && highs[i] - price < minDist)
+            {
+               minDist = highs[i] - price;
+               out.resistance = highs[i];
+            }
+         }
+      }
+   }
+   else
+   {
+      out.resistance = 0.0;
+   }
+
+   DrawSupportResistanceLines(symbol, tf, out.support, out.resistance, codename);
+   return out;
+}
+
 inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf,
                                           double supportLevel, double resistanceLevel,
                                           const string codename)

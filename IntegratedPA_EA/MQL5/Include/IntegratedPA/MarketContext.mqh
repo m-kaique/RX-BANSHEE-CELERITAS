@@ -233,21 +233,57 @@ public:
       {
          info.phase = PHASE_TREND;
          info.desc = d;
-         return info;
       }
       // if (IsRangePhase(symbol, tf, rangeThr, d))
       // {
       //    info.phase = PHASE_RANGE;
       //    info.desc = d;
-      //    return info;
       // }
-      // if (IsReversalPhase(symbol, tf, d))
+      // else if (IsReversalPhase(symbol, tf, d))
       // {
       //    info.phase = PHASE_REVERSAL;
       //    info.desc = d;
-      //    return info;
       // }
-      info.desc = "condicoes neutras";
+      else
+      {
+         info.desc = "condicoes neutras";
+      }
+
+      // adiciona niveis de suporte macro 4H
+      double price = iClose(symbol, PERIOD_H4, 1);
+      double sup = FindNearestSupport(symbol, PERIOD_H4, price);
+      double res = FindNearestResistance(symbol, PERIOD_H4, price);
+      int digits = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+
+      // adiciona niveis de suporte macro 1H
+      double price_h1 = iClose(symbol, PERIOD_H1, 1);
+      double sup_h1 = FindNearestSupport(symbol, PERIOD_H1, price_h1);
+      double res_h1 = FindNearestResistance(symbol, PERIOD_H1, price_h1);
+      int digits_h1 = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+
+      // adiciona niveis de suporte macro 30 min
+      double price_m30 = iClose(symbol, PERIOD_M30, 1);
+      double sup_m30 = FindNearestSupport(symbol, PERIOD_M30, price_m30);
+      double res_m30 = FindNearestResistance(symbol, PERIOD_M30, price_m30);
+      int digits_m30 = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+
+      // adiciona niveis de suporte macro 15 min micro
+      double price_m15 = iClose(symbol, PERIOD_M15, 1);
+      double sup_m15 = FindNearestSupport(symbol, PERIOD_M15, price_m15);
+      double res_m15 = FindNearestResistance(symbol, PERIOD_M15, price_m15);
+      int digits_m15 = (int)SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+
+      DrawSupportResistanceLines(symbol, PERIOD_H4, sup, res, "ctx_macro");
+      DrawSupportResistanceLines(symbol, PERIOD_H1, sup_h1, res_h1, "ctx_alto");
+      DrawSupportResistanceLines(symbol, PERIOD_M30, sup_m30, res_m30, "ctx_médio");
+      DrawSupportResistanceLines(symbol, PERIOD_M15, sup_m15, res_m15, "ctx_micro");
+
+
+      if (sup > 0.0)
+         info.desc += " S:" + DoubleToString(sup, digits);
+      if (res > 0.0)
+         info.desc += " R:" + DoubleToString(res, digits);
+
       return info;
    }
 
@@ -293,6 +329,64 @@ public:
       arr[0] = tf;
       arr[1] = ctxTf;
       return DetectPhaseMTF(symbol, arr, 2, rangeThr).phase;
+   }
+
+   /// Encontra o suporte mais próximo ao preco informado
+   double FindNearestSupport(const string symbol, ENUM_TIMEFRAMES tf, double price,
+                             int lookbackBars = 50)
+   {
+      if (!EnsureHistory(symbol, tf, lookbackBars))
+         return 0.0;
+
+      double lows[];
+      ArraySetAsSeries(lows, true);
+      if (CopyLow(symbol, tf, 0, lookbackBars, lows) != lookbackBars)
+         return 0.0;
+
+      double support = 0.0;
+      double minDist = DBL_MAX;
+      for (int i = 2; i < lookbackBars - 2; i++)
+      {
+         if (lows[i] < lows[i - 1] && lows[i] < lows[i - 2] &&
+             lows[i] < lows[i + 1] && lows[i] < lows[i + 2])
+         {
+            if (lows[i] < price && price - lows[i] < minDist)
+            {
+               minDist = price - lows[i];
+               support = lows[i];
+            }
+         }
+      }
+      return support;
+   }
+
+   /// Encontra a resistência mais próxima ao preco informado
+   double FindNearestResistance(const string symbol, ENUM_TIMEFRAMES tf, double price,
+                                int lookbackBars = 50)
+   {
+      if (!EnsureHistory(symbol, tf, lookbackBars))
+         return 0.0;
+
+      double highs[];
+      ArraySetAsSeries(highs, true);
+      if (CopyHigh(symbol, tf, 0, lookbackBars, highs) != lookbackBars)
+         return 0.0;
+
+      double resistance = 0.0;
+      double minDist = DBL_MAX;
+      for (int i = 2; i < lookbackBars - 2; i++)
+      {
+         if (highs[i] > highs[i - 1] && highs[i] > highs[i - 2] &&
+             highs[i] > highs[i + 1] && highs[i] > highs[i + 2])
+         {
+            if (highs[i] > price && highs[i] - price < minDist)
+            {
+               minDist = highs[i] - price;
+               resistance = highs[i];
+            }
+         }
+      }
+      return resistance;
    }
 };
 

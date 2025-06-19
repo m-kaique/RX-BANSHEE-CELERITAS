@@ -3,6 +3,7 @@
 #include <Trade/SymbolInfo.mqh>
 #include "Defs.mqh"
 #include "Utils.mqh"
+#include "MarketContext.mqh"
 
 class RiskManager
 {
@@ -167,6 +168,23 @@ public:
    void UpdateAccountInfo()
    {
       m_equity=AccountInfoDouble(ACCOUNT_EQUITY);
+   }
+
+   /// Wrapper to access MarketContext volatility ratio
+   double GetVolatilityRatio(const string symbol, ENUM_TIMEFRAMES tf,
+                             int atrPeriod=DEFAULT_ATR_PERIOD,
+                             int lookback=20)
+   {
+      MarketContextAnalyzer ctx;
+      return ctx.GetVolatilityRatio(symbol, tf, atrPeriod, lookback);
+   }
+
+   /// Wrapper to access MarketContext trend strength metric
+   double GetTrendStrength(const string symbol, ENUM_TIMEFRAMES tf,
+                           int atrPeriod=DEFAULT_ATR_PERIOD)
+   {
+      MarketContextAnalyzer ctx;
+      return ctx.GetTrendStrength(symbol, tf, atrPeriod);
    }
 };
 

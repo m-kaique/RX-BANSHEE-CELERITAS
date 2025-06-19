@@ -327,6 +327,62 @@ public:
       return highs[idx];
    }
 
+   /// Calculate ATR volatility ratio (current ATR / average past ATR)
+   double GetVolatilityRatio(const string symbol, ENUM_TIMEFRAMES tf,
+                             int atrPeriod=DEFAULT_ATR_PERIOD,
+                             int lookback=20)
+   {
+      if(lookback<=0)
+         lookback=1;
+      if(!EnsureHistory(symbol, tf, atrPeriod+lookback))
+         return 0.0;
+      int handle=GetATRHandle(symbol, tf, atrPeriod);
+      if(handle==INVALID_HANDLE)
+         return 0.0;
+      double buf[];
+      ArraySetAsSeries(buf,true);
+      int needed=lookback+1;
+      if(CopyBuffer(handle,0,0,needed,buf)<needed)
+         return 0.0;
+      double current=buf[0];
+      double sum=0.0;
+      for(int i=1;i<needed;i++)
+         sum+=buf[i];
+      double avg=sum/lookback;
+      if(avg<=0.0)
+         return 0.0;
+      return current/avg;
+   }
+
+   /// Measure trend strength based on EMA spacing normalized by ATR
+   double GetTrendStrength(const string symbol, ENUM_TIMEFRAMES tf,
+                           int atrPeriod=DEFAULT_ATR_PERIOD)
+   {
+      if(!EnsureHistory(symbol, tf, 200))
+         return 0.0;
+      int h9=GetEMAHandle(symbol, tf, 9);
+      int h21=GetEMAHandle(symbol, tf, 21);
+      int h50=GetEMAHandle(symbol, tf, 50);
+      int h200=GetEMAHandle(symbol, tf, 200);
+      int hAtr=GetATRHandle(symbol, tf, atrPeriod);
+      if(h9==INVALID_HANDLE || h21==INVALID_HANDLE || h50==INVALID_HANDLE ||
+         h200==INVALID_HANDLE || hAtr==INVALID_HANDLE)
+         return 0.0;
+      double b9[1],b21[1],b50[1],b200[1],atrBuf[1];
+      if(CopyBuffer(h9,0,0,1,b9)<=0 || CopyBuffer(h21,0,0,1,b21)<=0 ||
+         CopyBuffer(h50,0,0,1,b50)<=0 || CopyBuffer(h200,0,0,1,b200)<=0 ||
+         CopyBuffer(hAtr,0,0,1,atrBuf)<=0)
+         return 0.0;
+      double atr=atrBuf[0];
+      if(atr<=0.0)
+         return 0.0;
+      double d1=MathAbs(b9[0]-b21[0]);
+      double d2=MathAbs(b21[0]-b50[0]);
+      double d3=MathAbs(b50[0]-b200[0]);
+      double strength=(d1+d2+d3)/(3.0*atr);
+      return strength;
+   }
+
    /// Analisa apenas um timeframe
    PhaseInfo DetectPhaseSingle(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr = 10.0)
    {

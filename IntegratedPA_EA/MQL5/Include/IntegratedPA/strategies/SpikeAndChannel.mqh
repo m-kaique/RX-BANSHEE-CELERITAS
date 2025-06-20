@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_SPIKEANDCHANNEL_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class SpikeAndChannel
 {
@@ -10,8 +11,11 @@ public:
    ~SpikeAndChannel(){}
 
    // Identify a Spike and Channel pattern using a simplified rule set
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+         return false;
       // skip if price is in mean reversion zone between EMA50 and EMA200
       if(CheckMeanReversion50to200(symbol,tf))
          return false;
@@ -54,15 +58,17 @@ public:
    }
 
    // Generate a basic trade signal when a spike is detected
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Print("GenerateSignal VALIDANDO SPIKE AND CHANNEL..........");
       Signal s; s.valid=false;
       double point=SymbolInfoDouble(symbol,SYMBOL_POINT);
-
-      if(!Identify(symbol,tf))
+      if(!Identify(symbol,tf,asset))
+      {
          Print("GenerateSignal FALHOU DESGRAÇADAMENTE..........");
          return s;
+      }
+
       
 // ##################################################################################################
       double close0=iClose(symbol,tf,1);

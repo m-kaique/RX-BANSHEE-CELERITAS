@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_TRENDRANGEDAY_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class TrendRangeDay
 {
@@ -12,8 +13,11 @@ public:
    // Identify a Trending Trading Range Day pattern
    // Based on guide lines 3955-3970 describing consecutive ranges
    // moving in the direction of the trend
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+         return false;
       // do not trade trend setups if price is mean reverting to the 50-200 zone
       if(CheckMeanReversion50to200(symbol,tf))
          return false;
@@ -45,11 +49,11 @@ public:
    }
 
    // Generate breakout signal from the last range
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
 
-      if(!Identify(symbol,tf))
+      if(!Identify(symbol,tf,asset))
          return s;
 
       double ema20=GetEMA(symbol,tf,20);

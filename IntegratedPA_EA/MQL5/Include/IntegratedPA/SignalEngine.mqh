@@ -63,91 +63,85 @@ public:
    ~SignalEngine(){}
 
    // Gera sinal principal
-   Signal Generate(const string symbol,MARKET_PHASE phase,ENUM_TIMEFRAMES tf)
+   Signal Generate(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
-      switch(phase)
+
+      if(UseSpikeAndChannel)
       {
-         case PHASE_TREND:
-            s=GenerateTrendSignals(symbol,tf);
-            break;
-         // case PHASE_RANGE:
-         //    s=GenerateRangeSignals(symbol,tf);
-         //    break;
-         // case PHASE_REVERSAL:
-         //    s=GenerateReversalSignals(symbol,tf);
-         //    break;
-         default:
-            break;
+         SpikeAndChannel sac;
+         if(sac.Identify(symbol,tf,asset))
+            return sac.GenerateSignal(symbol,tf,asset);
       }
+
+      if(UsePullbackMA)
+      {
+         PullbackToMA pb;
+         if(pb.Identify(symbol,tf,asset))
+            return pb.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseFibonacciRetrace)
+      {
+         FibonacciRetrace fr;
+         if(fr.Identify(symbol,tf,asset))
+            return fr.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseBollingerStochastic)
+      {
+         BollingerStochastic bs;
+         if(bs.Identify(symbol,tf,asset))
+            return bs.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseTrendRangeDay)
+      {
+         TrendRangeDay trd;
+         if(trd.Identify(symbol,tf,asset))
+            return trd.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseRangeBreakout)
+      {
+         RangeBreakout br;
+         if(br.Identify(symbol,tf,asset))
+            return br.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseRangeFade)
+      {
+         RangeFade rf;
+         if(rf.Identify(symbol,tf,asset))
+            return rf.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseWedgeReversal)
+      {
+         WedgeReversal wr;
+         bool rising=false;
+         if(wr.Identify(symbol,tf,rising,asset))
+            return wr.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseMeanReversion50200)
+      {
+         MeanReversion50to200 mr;
+         bool buy=false;
+         if(mr.Identify(symbol,tf,buy,asset))
+            return mr.GenerateSignal(symbol,tf,asset);
+      }
+
+      if(UseVWAPReversion)
+      {
+         VWAPReversion vr;
+         bool buy2=false;
+         if(vr.Identify(symbol,tf,buy2,asset))
+            return vr.GenerateSignal(symbol,tf,asset);
+      }
+
       return s;
    }
-
-private:
-   // Estratégias de tendência
-   Signal GenerateTrendSignals(const string symbol,ENUM_TIMEFRAMES tf)
-   {
-      Signal s; s.valid=false;
-      // Prefer Spike and Channel detection before other trend strategies
-      SpikeAndChannel sac;
-      if(UseSpikeAndChannel && sac.Identify(symbol,tf))
-         return sac.GenerateSignal(symbol,tf);
-
-      // PullbackToMA pb;
-      // if(UsePullbackMA && pb.Identify(symbol,tf))
-      //    return pb.GenerateSignal(symbol,tf);
-
-      // FibonacciRetrace fr;
-      // if(UseFibonacciRetrace && fr.Identify(symbol,tf))
-      //    return fr.GenerateSignal(symbol,tf);
-
-      // BollingerStochastic bs;
-      // if(UseBollingerStochastic && bs.Identify(symbol,tf))
-      //    return bs.GenerateSignal(symbol,tf);
-
-      // TrendRangeDay trd;
-      // if(UseTrendRangeDay && trd.Identify(symbol,tf))
-      //    return trd.GenerateSignal(symbol,tf);
-
-      return s;
-   }
-
-   // Estratégias de range
-   Signal GenerateRangeSignals(const string symbol,ENUM_TIMEFRAMES tf)
-   {
-      Signal s; s.valid=false;
-      RangeBreakout br;
-      if(UseRangeBreakout && br.Identify(symbol,tf))
-         return br.GenerateSignal(symbol,tf);
-
-      RangeFade rf;
-      if(UseRangeFade && rf.Identify(symbol,tf))
-         return rf.GenerateSignal(symbol,tf);
-
-      return s;
-   }
-
-   // Estratégias de reversão
-  Signal GenerateReversalSignals(const string symbol,ENUM_TIMEFRAMES tf)
-  {
-      Signal s; s.valid=false;
-      WedgeReversal wr;
-      bool isRising=false;
-      if(UseWedgeReversal && wr.Identify(symbol,tf,isRising))
-         return wr.GenerateSignal(symbol,tf);
-
-      MeanReversion50to200 mr;
-      bool buy=false;
-      if(UseMeanReversion50200 && mr.Identify(symbol,tf,buy))
-         return mr.GenerateSignal(symbol,tf);
-
-      VWAPReversion vr;
-      bool buy2=false;
-      if(UseVWAPReversion && vr.Identify(symbol,tf,buy2))
-         return vr.GenerateSignal(symbol,tf);
-
-      return s;
-  }
 };
 
 #endif // INTEGRATEDPA_SIGNALENGINE_MQH

@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_FIBONACCIRETRACE_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 // Estrat\u00e9gia de revers\u00e3o na zona de ouro (61,8% de Fibonacci)
 // Inspirada nas orienta\u00e7\u00f5es do guia de trading em torno das linhas
@@ -18,8 +19,11 @@ public:
    ~FibonacciRetrace(){}
 
    // Identifica a presen\u00e7a de retra\u00e7\u00e3o at\u00e9 61,8% e candle de revers\u00e3o
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+         return false;
       const int lookback=50;
       int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,1);
       int idxLow =iLowest(symbol,tf,MODE_LOW ,lookback,1);
@@ -57,10 +61,10 @@ public:
    }
 
    // Gera sinal de compra ou venda com stop ap\u00f3s o n\u00edvel de 61,8%
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
-      if(!Identify(symbol,tf))
+      if(!Identify(symbol,tf,asset))
          return s;
 
       double point=SymbolInfoDouble(symbol,SYMBOL_POINT);

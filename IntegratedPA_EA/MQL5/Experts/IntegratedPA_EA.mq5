@@ -450,11 +450,8 @@ void OnTick()
       
       g_market.set_sr(symbol);
 
-      MARKET_PHASE phase = g_market.DetectPhaseMTF(symbol, MainTimeframe, g_assets[i].ctxTf,
-                                                   g_assets[i].rangeThreshold);
-
-      Signal sig = g_engine.Generate(symbol, phase, MainTimeframe);
-
+      Signal sig = g_engine.Generate(symbol, MainTimeframe, g_assets[i]);
+      
       if (!sig.valid)
          continue;
 
@@ -498,7 +495,7 @@ void OnTick()
          }
       }
 
-      OrderRequest req = g_risk.BuildRequest(symbol, sig, phase, g_assets[i].riskPercent);
+      OrderRequest req = g_risk.BuildRequest(symbol, sig, sig.phase, g_assets[i].riskPercent);
       if (g_risk.CanOpen(req))
          g_exec.Execute(req);
       else if (g_log)

@@ -1,6 +1,7 @@
 #ifndef INTEGRATEDPA_WEDGEREVERSAL_MQH
 #define INTEGRATEDPA_WEDGEREVERSAL_MQH
 #include "../Defs.mqh"
+#include "../MarketContext.mqh"
 
 class WedgeReversal
 {
@@ -9,8 +10,11 @@ public:
    ~WedgeReversal(){}
 
    // Identify rising/falling wedge as described in guide lines 4316-4379
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &isRising)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &isRising,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
+         return false;
       isRising=false;
 
       double h1=iHigh(symbol,tf,1);
@@ -40,11 +44,11 @@ public:
    }
 
    // Generate reversal signal on breakout of the wedge
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
       bool rising=false;
-      if(!Identify(symbol,tf,rising))
+      if(!Identify(symbol,tf,rising,asset))
          return s;
 
       double close0=iClose(symbol,tf,0);

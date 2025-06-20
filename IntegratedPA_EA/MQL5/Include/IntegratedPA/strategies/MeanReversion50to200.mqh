@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_MEANREV50TO200_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 //+------------------------------------------------------------------+
 //| Mean Reversion from EMA50 to EMA200                              |
@@ -17,8 +18,11 @@ public:
    ~MeanReversion50to200(){}
 
    // Identify mean reversion opportunity
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
+         return false;
       double ema50 = GetEMA(symbol,tf,50);
       double ema200= GetEMA(symbol,tf,200);
       double price0= iClose(symbol,tf,0);
@@ -47,11 +51,11 @@ public:
    }
 
    // Generate trade signal
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
       bool buy=false;
-      if(!Identify(symbol,tf,buy))
+      if(!Identify(symbol,tf,buy,asset))
          return s;
 
       double point=SymbolInfoDouble(symbol,SYMBOL_POINT);

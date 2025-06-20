@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_BOLLINGERSTOCHASTIC_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 // Strategy combining Bollinger Bands context with Stochastic timing
 class BollingerStochastic
@@ -13,8 +14,11 @@ public:
    ~BollingerStochastic(){}
 
    // Identify setup according to guide lines 3600-3625
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+         return false;
       double ema9=GetEMA(symbol,tf,9);
       double ema50=GetEMA(symbol,tf,50);
       double vwap=GetVWAP(symbol,tf);
@@ -49,10 +53,10 @@ public:
       return false;
    }
 
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
-      if(!Identify(symbol,tf))
+      if(!Identify(symbol,tf,asset))
          return s;
 
       double ema9 =GetEMA(symbol,tf,9);

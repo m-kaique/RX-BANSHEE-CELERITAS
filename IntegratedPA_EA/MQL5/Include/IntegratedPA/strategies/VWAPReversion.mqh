@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_VWAPREVERSION_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class VWAPReversion
 {
@@ -10,8 +11,11 @@ public:
    ~VWAPReversion(){}
 
    // Identify when price is stretched away from VWAP and showing exhaustion
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
+         return false;
       double vwap = GetVWAP(symbol,tf);
       double atr  = GetATR(symbol,tf,14);
       if(atr<=0.0) return false;
@@ -39,11 +43,11 @@ public:
    }
 
    // Generate trade signal targeting the VWAP
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
       bool buy=false;
-      if(!Identify(symbol,tf,buy))
+      if(!Identify(symbol,tf,buy,asset))
          return s;
 
       double vwap = GetVWAP(symbol,tf);

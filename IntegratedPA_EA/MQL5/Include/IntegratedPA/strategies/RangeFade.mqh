@@ -1,6 +1,7 @@
 #ifndef INTEGRATEDPA_RANGEFADE_MQH
 #define INTEGRATEDPA_RANGEFADE_MQH
 #include "../Defs.mqh"
+#include "../MarketContext.mqh"
 
 class RangeFade
 {
@@ -13,8 +14,11 @@ public:
    ~RangeFade(){}
 
    // Identify rejection at range extremes
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_RANGE)
+         return false;
       const int lookback=20;
       int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,1);
       int idxLow =iLowest(symbol,tf,MODE_LOW, lookback,1);
@@ -43,10 +47,10 @@ public:
    }
 
    // Generate trade signal fading the range extreme
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
-      if(!Identify(symbol,tf))
+      if(!Identify(symbol,tf,asset))
          return s;
 
       double range=m_high-m_low;

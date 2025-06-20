@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_RANGEBREAKOUT_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class RangeBreakout
 {
@@ -14,8 +15,11 @@ public:
    ~RangeBreakout(){}
 
    // Identify breakout beyond range boundaries with volume/VWAP confirmation
-   bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
+      MarketContextAnalyzer ctx;
+      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_RANGE)
+         return false;
       const int lookback=20;
       int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,2);
       int idxLow =iLowest(symbol,tf,MODE_LOW, lookback,2);
@@ -59,10 +63,10 @@ public:
    }
 
    // Generate breakout signal using range projection
-   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf)
+   Signal GenerateSignal(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
       Signal s; s.valid=false;
-      if(!Identify(symbol,tf))
+      if(!Identify(symbol,tf,asset))
          return s;
 
       double range=m_high-m_low;

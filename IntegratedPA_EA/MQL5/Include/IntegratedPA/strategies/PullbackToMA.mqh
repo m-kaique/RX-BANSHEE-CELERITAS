@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_PULLBACKTOMA_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "../MarketContext.mqh"
 
 class PullbackToMA
 {
@@ -9,8 +10,11 @@ public:
     PullbackToMA(){}
     ~PullbackToMA(){}
 
-    bool Identify(const string symbol, ENUM_TIMEFRAMES tf)
+    bool Identify(const string symbol, ENUM_TIMEFRAMES tf,const AssetConfig &asset)
     {
+        MarketContextAnalyzer ctx;
+        if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+            return false;
         // avoid entries when price is already near the 50-200 mean
         if(CheckMeanReversion50to200(symbol, tf))
             return false;
@@ -32,9 +36,11 @@ public:
         return false;
     }
 
-    Signal GenerateSignal(const string symbol, ENUM_TIMEFRAMES tf)
+    Signal GenerateSignal(const string symbol, ENUM_TIMEFRAMES tf,const AssetConfig &asset)
     {
         Signal s; s.valid = false;
+        if(!Identify(symbol, tf, asset))
+            return s;
         double ema21 = GetEMA(symbol, tf, 21);
         double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
 

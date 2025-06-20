@@ -9,6 +9,11 @@ public:
    WedgeReversal(){}
    ~WedgeReversal(){}
    string Name() const override { return "WedgeRev"; }
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf) override
+   {
+      bool dummy=false;
+      return Identify(symbol,tf,dummy);
+   }
 
    // Identify rising/falling wedge as described in guide lines 4316-4379
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &isRising)

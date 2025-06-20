@@ -10,6 +10,11 @@ public:
    VWAPReversion(){}
    ~VWAPReversion(){}
    string Name() const override { return "VWAPRev"; }
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf) override
+   {
+      bool dummy=false;
+      return Identify(symbol,tf,dummy);
+   }
 
    // Identify when price is stretched away from VWAP and showing exhaustion
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal)

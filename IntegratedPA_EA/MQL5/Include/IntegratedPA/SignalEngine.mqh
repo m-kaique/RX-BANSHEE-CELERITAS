@@ -115,16 +115,34 @@ public:
 
    Signal Generate(const string symbol,MARKET_PHASE phase,ENUM_TIMEFRAMES tf)
    {
-      IStrategy **list=NULL;
-      int count=0;
-      if(phase==PHASE_TREND){ list=m_trend; count=ArraySize(m_trend); }
-      else if(phase==PHASE_RANGE){ list=m_range; count=ArraySize(m_range); }
-      else if(phase==PHASE_REVERSAL){ list=m_reversal; count=ArraySize(m_reversal); }
       Signal s; s.valid=false;
-      for(int i=0;i<count;i++)
+
+      if(phase==PHASE_TREND)
       {
-         if(list[i].Identify(symbol,tf))
-            return list[i].GenerateSignal(symbol,tf);
+         int count=ArraySize(m_trend);
+         for(int i=0;i<count;i++)
+         {
+            if(m_trend[i].Identify(symbol,tf))
+               return m_trend[i].GenerateSignal(symbol,tf);
+         }
+      }
+      else if(phase==PHASE_RANGE)
+      {
+         int count=ArraySize(m_range);
+         for(int i=0;i<count;i++)
+         {
+            if(m_range[i].Identify(symbol,tf))
+               return m_range[i].GenerateSignal(symbol,tf);
+         }
+      }
+      else if(phase==PHASE_REVERSAL)
+      {
+         int count=ArraySize(m_reversal);
+         for(int i=0;i<count;i++)
+         {
+            if(m_reversal[i].Identify(symbol,tf))
+               return m_reversal[i].GenerateSignal(symbol,tf);
+         }
       }
       return s;
    }

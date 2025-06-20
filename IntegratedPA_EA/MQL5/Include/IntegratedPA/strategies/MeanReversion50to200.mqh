@@ -17,6 +17,11 @@ public:
    MeanReversion50to200(){}
    ~MeanReversion50to200(){}
    string Name() const override { return "MR50to200"; }
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf) override
+   {
+      bool dummy=false;
+      return Identify(symbol,tf,dummy);
+   }
 
    // Identify mean reversion opportunity
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal)

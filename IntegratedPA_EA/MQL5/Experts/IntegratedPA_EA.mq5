@@ -3,6 +3,7 @@
 #property version "1.00"
 #property strict
 
+
 #include <Trade/Trade.mqh>
 #include <Arrays/ArrayObj.mqh>
 #include <IntegratedPA/MarketContext.mqh>

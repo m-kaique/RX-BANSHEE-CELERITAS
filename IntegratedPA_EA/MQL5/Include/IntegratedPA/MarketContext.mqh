@@ -155,6 +155,9 @@ private:
          return true;
       }
 
+      desc = "Sem Tendência em: " +  EnumToString(tf);
+         Print(desc);
+
       return false;
    }
    

@@ -85,9 +85,11 @@ private:
       return false;
    }
 
-   //================================================================================
-   // Modificações para MarketContext.mqh - Função IsTrendPhase() otimizada
-   //================================================================================
+   //=======================================================================
+   // IsTrendPhase() implementa o conceito de "trend transition" de Al Brooks
+   // para entradas mais rápidas quando EMA9 cruza EMA21 e as EMAs de 21 e 50
+   // apontam na mesma direção. A EMA200 é usada apenas como contexto.
+   //=======================================================================
    bool IsTrendPhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
    {
       // Verificar se há dados suficientes
@@ -109,9 +111,13 @@ private:
          return false;
       }
 
-      // Verificar alinhamento das médias móveis
-      bool upTrendAlignment = (ema9 > ema21 && ema21 > ema50 && ema50 > ema200);
-      bool downTrendAlignment = (ema9 < ema21 && ema21 < ema50 && ema50 < ema200);
+      // Verificar alinhamento das médias móveis considerando "trend transition"
+      double slope21 = GetEMASlope(symbol, tf, 21, 3);
+      double slope50 = GetEMASlope(symbol, tf, 50, 3);
+      bool upTrendAlignment = (ema9 > ema21 && slope21 > 0 && slope50 > 0);
+      bool downTrendAlignment = (ema9 < ema21 && slope21 < 0 && slope50 < 0);
+      bool above200 = (ema50 > ema200);
+      bool below200 = (ema50 < ema200);
 
       if (!upTrendAlignment && !downTrendAlignment)
       {
@@ -138,19 +144,23 @@ private:
       }
 
       // Verificar condições de tendência de alta
-      if (upTrendAlignment && upMomentum && rsi > 60)
+      if (upTrendAlignment && upMomentum && rsi > 55)
       {
-         desc = "Tendência de Alta: EMAs alinhadas (9>21>50>200), MACD>signal, RSI=" +
-                DoubleToString(rsi, 1) + "TIME FRAME MA: " + EnumToString(tf);
+         desc = "Alta transição: EMA9>EMA21, slopes +, MACD>signal, RSI=" +
+                DoubleToString(rsi, 1);
+         if (above200)
+            desc += ", acima da EMA200";
          Print(desc);
          return true;
       }
 
       // Verificar condições de tendência de baixa
-      if (downTrendAlignment && downMomentum && rsi < 40)
+      if (downTrendAlignment && downMomentum && rsi < 45)
       {
-         desc = "Tendência de Baixa: EMAs alinhadas (9<21<50<200), MACD<signal, RSI=" +
-                DoubleToString(rsi, 1) + "TIME FRAME MA: " + EnumToString(tf);
+         desc = "Baixa transição: EMA9<EMA21, slopes -, MACD<signal, RSI=" +
+                DoubleToString(rsi, 1);
+         if (below200)
+            desc += ", abaixo da EMA200";
          Print(desc);
          return true;
       }
@@ -237,6 +247,8 @@ public:
    }
 
    /// Analise multi-timeframe ate 4 periodos
+   /// Usa IsTrendPhase com a lógica de "trend transition" para confirmar
+   /// o contexto do timeframe maior antes de atuar no menor.
    PhaseInfo DetectPhaseMTF(const string symbol, const ENUM_TIMEFRAMES &tfs[], int count,
                             double rangeThr = 10.0)
    {

@@ -367,6 +367,8 @@ int OnInit()
    ResetDailyLimits();
 
    g_market = new MarketContext();
+   if(g_market && g_log)
+      g_market.SetLogger(g_log);
    g_engine = new SignalEngine();
    g_risk = new RiskManager(RiskPerTrade, MaxTotalRisk);
    g_exec = new TradeExecutor();

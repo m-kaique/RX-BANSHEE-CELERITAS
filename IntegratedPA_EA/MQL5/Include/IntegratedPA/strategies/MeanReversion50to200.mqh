@@ -2,6 +2,7 @@
 #define INTEGRATEDPA_MEANREV50TO200_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
 //+------------------------------------------------------------------+
 //| Mean Reversion from EMA50 to EMA200                              |
@@ -10,11 +11,17 @@
 //| around 1316-1455). This strategy enters near the midpoint        |
 //| between EMA50 and EMA200 once price shows exhaustion.            |
 //+------------------------------------------------------------------+
-class MeanReversion50to200
+class MeanReversion50to200 : public IStrategy
 {
 public:
    MeanReversion50to200(){}
    ~MeanReversion50to200(){}
+   string Name() const override { return "MR50to200"; }
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf) override
+   {
+      bool dummy=false;
+      return Identify(symbol,tf,dummy);
+   }
 
    // Identify mean reversion opportunity
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal)

@@ -2,12 +2,14 @@
 #define INTEGRATEDPA_SPIKEANDCHANNEL_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
-class SpikeAndChannel
+class SpikeAndChannel : public IStrategy
 {
 public:
    SpikeAndChannel(){}
    ~SpikeAndChannel(){}
+   string Name() const override { return "SpikeChannel"; }
 
    // Identify a Spike and Channel pattern using a simplified rule set
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf)
@@ -61,8 +63,10 @@ public:
       double point=SymbolInfoDouble(symbol,SYMBOL_POINT);
 
       if(!Identify(symbol,tf))
+      {
          Print("GenerateSignal FALHOU DESGRAÇADAMENTE..........");
          return s;
+      }
       
 // ##################################################################################################
       double close0=iClose(symbol,tf,1);

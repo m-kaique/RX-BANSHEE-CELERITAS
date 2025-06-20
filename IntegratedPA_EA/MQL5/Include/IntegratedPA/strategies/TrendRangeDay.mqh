@@ -2,12 +2,14 @@
 #define INTEGRATEDPA_TRENDRANGEDAY_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
-class TrendRangeDay
+class TrendRangeDay : public IStrategy
 {
 public:
    TrendRangeDay(){}
    ~TrendRangeDay(){}
+   string Name() const override { return "TrendRangeDay"; }
 
    // Identify a Trending Trading Range Day pattern
    // Based on guide lines 3955-3970 describing consecutive ranges

@@ -2,12 +2,19 @@
 #define INTEGRATEDPA_VWAPREVERSION_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
-class VWAPReversion
+class VWAPReversion : public IStrategy
 {
 public:
    VWAPReversion(){}
    ~VWAPReversion(){}
+   string Name() const override { return "VWAPRev"; }
+   bool Identify(const string symbol,ENUM_TIMEFRAMES tf) override
+   {
+      bool dummy=false;
+      return Identify(symbol,tf,dummy);
+   }
 
    // Identify when price is stretched away from VWAP and showing exhaustion
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal)

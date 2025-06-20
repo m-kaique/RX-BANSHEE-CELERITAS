@@ -2,12 +2,14 @@
 #define INTEGRATEDPA_PULLBACKTOMA_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
-class PullbackToMA
+class PullbackToMA : public IStrategy
 {
 public:
     PullbackToMA(){}
     ~PullbackToMA(){}
+    string Name() const override { return "PullbackMA"; }
 
     bool Identify(const string symbol, ENUM_TIMEFRAMES tf)
     {

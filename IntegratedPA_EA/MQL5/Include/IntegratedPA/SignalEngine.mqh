@@ -44,6 +44,7 @@
 #define INTEGRATEDPA_SIGNALENGINE_MQH
 #include "Defs.mqh"
 #include "Utils.mqh"
+#include "strategies/StrategyBase.mqh"
 #include "strategies/TrendRangeDay.mqh"
 #include "strategies/WedgeReversal.mqh"
 #include "strategies/SpikeAndChannel.mqh"
@@ -58,96 +59,75 @@
 
 class SignalEngine
 {
-public:
-   SignalEngine(){}
-   ~SignalEngine(){}
+private:
+   IStrategy *m_trend[];
+   IStrategy *m_range[];
+   IStrategy *m_reversal[];
 
-   // Gera sinal principal
+   void AddTrend(IStrategy *s)
+   {
+      int n=ArraySize(m_trend);
+      ArrayResize(m_trend,n+1);
+      m_trend[n]=s;
+   }
+
+   void AddRange(IStrategy *s)
+   {
+      int n=ArraySize(m_range);
+      ArrayResize(m_range,n+1);
+      m_range[n]=s;
+   }
+
+   void AddReversal(IStrategy *s)
+   {
+      int n=ArraySize(m_reversal);
+      ArrayResize(m_reversal,n+1);
+      m_reversal[n]=s;
+   }
+
+public:
+   SignalEngine()
+   {
+      ArrayResize(m_trend,0);
+      ArrayResize(m_range,0);
+      ArrayResize(m_reversal,0);
+
+      if(UseSpikeAndChannel)    AddTrend(new SpikeAndChannel());
+      if(UsePullbackMA)         AddTrend(new PullbackToMA());
+      if(UseFibonacciRetrace)   AddTrend(new FibonacciRetrace());
+      if(UseBollingerStochastic)AddTrend(new BollingerStochastic());
+      if(UseTrendRangeDay)      AddTrend(new TrendRangeDay());
+
+      if(UseRangeBreakout)      AddRange(new RangeBreakout());
+      if(UseRangeFade)          AddRange(new RangeFade());
+
+      if(UseWedgeReversal)      AddReversal(new WedgeReversal());
+      if(UseMeanReversion50200) AddReversal(new MeanReversion50to200());
+      if(UseVWAPReversion)      AddReversal(new VWAPReversion());
+   }
+
+   ~SignalEngine()
+   {
+      for(int i=0;i<ArraySize(m_trend);i++)   delete m_trend[i];
+      for(int i=0;i<ArraySize(m_range);i++)   delete m_range[i];
+      for(int i=0;i<ArraySize(m_reversal);i++)delete m_reversal[i];
+   }
+
    Signal Generate(const string symbol,MARKET_PHASE phase,ENUM_TIMEFRAMES tf)
    {
+      IStrategy **list=NULL;
+      int count=0;
+      if(phase==PHASE_TREND){ list=m_trend; count=ArraySize(m_trend); }
+      else if(phase==PHASE_RANGE){ list=m_range; count=ArraySize(m_range); }
+      else if(phase==PHASE_REVERSAL){ list=m_reversal; count=ArraySize(m_reversal); }
       Signal s; s.valid=false;
-      switch(phase)
+      for(int i=0;i<count;i++)
       {
-         case PHASE_TREND:
-            s=GenerateTrendSignals(symbol,tf);
-            break;
-         // case PHASE_RANGE:
-         //    s=GenerateRangeSignals(symbol,tf);
-         //    break;
-         // case PHASE_REVERSAL:
-         //    s=GenerateReversalSignals(symbol,tf);
-         //    break;
-         default:
-            break;
+         if(list[i].Identify(symbol,tf))
+            return list[i].GenerateSignal(symbol,tf);
       }
       return s;
    }
-
-private:
-   // Estratégias de tendência
-   Signal GenerateTrendSignals(const string symbol,ENUM_TIMEFRAMES tf)
-   {
-      Signal s; s.valid=false;
-      // Prefer Spike and Channel detection before other trend strategies
-      SpikeAndChannel sac;
-      if(UseSpikeAndChannel && sac.Identify(symbol,tf))
-         return sac.GenerateSignal(symbol,tf);
-
-      // PullbackToMA pb;
-      // if(UsePullbackMA && pb.Identify(symbol,tf))
-      //    return pb.GenerateSignal(symbol,tf);
-
-      // FibonacciRetrace fr;
-      // if(UseFibonacciRetrace && fr.Identify(symbol,tf))
-      //    return fr.GenerateSignal(symbol,tf);
-
-      // BollingerStochastic bs;
-      // if(UseBollingerStochastic && bs.Identify(symbol,tf))
-      //    return bs.GenerateSignal(symbol,tf);
-
-      // TrendRangeDay trd;
-      // if(UseTrendRangeDay && trd.Identify(symbol,tf))
-      //    return trd.GenerateSignal(symbol,tf);
-
-      return s;
-   }
-
-   // Estratégias de range
-   Signal GenerateRangeSignals(const string symbol,ENUM_TIMEFRAMES tf)
-   {
-      Signal s; s.valid=false;
-      RangeBreakout br;
-      if(UseRangeBreakout && br.Identify(symbol,tf))
-         return br.GenerateSignal(symbol,tf);
-
-      RangeFade rf;
-      if(UseRangeFade && rf.Identify(symbol,tf))
-         return rf.GenerateSignal(symbol,tf);
-
-      return s;
-   }
-
-   // Estratégias de reversão
-  Signal GenerateReversalSignals(const string symbol,ENUM_TIMEFRAMES tf)
-  {
-      Signal s; s.valid=false;
-      WedgeReversal wr;
-      bool isRising=false;
-      if(UseWedgeReversal && wr.Identify(symbol,tf,isRising))
-         return wr.GenerateSignal(symbol,tf);
-
-      MeanReversion50to200 mr;
-      bool buy=false;
-      if(UseMeanReversion50200 && mr.Identify(symbol,tf,buy))
-         return mr.GenerateSignal(symbol,tf);
-
-      VWAPReversion vr;
-      bool buy2=false;
-      if(UseVWAPReversion && vr.Identify(symbol,tf,buy2))
-         return vr.GenerateSignal(symbol,tf);
-
-      return s;
-  }
 };
 
 #endif // INTEGRATEDPA_SIGNALENGINE_MQH

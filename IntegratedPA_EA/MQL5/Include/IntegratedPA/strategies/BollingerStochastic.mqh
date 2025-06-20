@@ -2,15 +2,17 @@
 #define INTEGRATEDPA_BOLLINGERSTOCHASTIC_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
 // Strategy combining Bollinger Bands context with Stochastic timing
-class BollingerStochastic
+class BollingerStochastic : public IStrategy
 {
 private:
    bool m_buy;
 public:
    BollingerStochastic():m_buy(false){}
    ~BollingerStochastic(){}
+   string Name() const override { return "BollStoch"; }
 
    // Identify setup according to guide lines 3600-3625
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf)

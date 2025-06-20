@@ -1,12 +1,14 @@
 #ifndef INTEGRATEDPA_WEDGEREVERSAL_MQH
 #define INTEGRATEDPA_WEDGEREVERSAL_MQH
 #include "../Defs.mqh"
+#include "StrategyBase.mqh"
 
-class WedgeReversal
+class WedgeReversal : public IStrategy
 {
 public:
    WedgeReversal(){}
    ~WedgeReversal(){}
+   string Name() const override { return "WedgeRev"; }
 
    // Identify rising/falling wedge as described in guide lines 4316-4379
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &isRising)

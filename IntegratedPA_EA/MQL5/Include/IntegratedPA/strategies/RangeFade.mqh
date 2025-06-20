@@ -1,8 +1,9 @@
 #ifndef INTEGRATEDPA_RANGEFADE_MQH
 #define INTEGRATEDPA_RANGEFADE_MQH
 #include "../Defs.mqh"
+#include "StrategyBase.mqh"
 
-class RangeFade
+class RangeFade : public IStrategy
 {
 private:
    double m_high;
@@ -11,6 +12,7 @@ private:
 public:
    RangeFade():m_high(0),m_low(0),m_buySignal(false){}
    ~RangeFade(){}
+   string Name() const override { return "RangeFade"; }
 
    // Identify rejection at range extremes
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf)

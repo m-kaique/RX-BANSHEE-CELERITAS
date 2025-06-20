@@ -2,12 +2,13 @@
 #define INTEGRATEDPA_FIBONACCIRETRACE_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
 // Estrat\u00e9gia de revers\u00e3o na zona de ouro (61,8% de Fibonacci)
 // Inspirada nas orienta\u00e7\u00f5es do guia de trading em torno das linhas
 // 640-665 que destacam compras e vendas quando o pre\u00e7o reage ao n\u00edvel
 // de 61,8% ap\u00f3s um movimento tendencial.
-class FibonacciRetrace
+class FibonacciRetrace : public IStrategy
 {
 private:
    double m_high;
@@ -16,6 +17,7 @@ private:
 public:
    FibonacciRetrace():m_high(0),m_low(0),m_buySignal(false){}
    ~FibonacciRetrace(){}
+   string Name() const override { return "FiboRetrace"; }
 
    // Identifica a presen\u00e7a de retra\u00e7\u00e3o at\u00e9 61,8% e candle de revers\u00e3o
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf)

@@ -2,8 +2,9 @@
 #define INTEGRATEDPA_RANGEBREAKOUT_MQH
 #include "../Defs.mqh"
 #include "../Utils.mqh"
+#include "StrategyBase.mqh"
 
-class RangeBreakout
+class RangeBreakout : public IStrategy
 {
 private:
    double m_high;
@@ -12,6 +13,7 @@ private:
 public:
    RangeBreakout():m_high(0),m_low(0),m_buySignal(false){}
    ~RangeBreakout(){}
+   string Name() const override { return "RangeBreak"; }
 
    // Identify breakout beyond range boundaries with volume/VWAP confirmation
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf)

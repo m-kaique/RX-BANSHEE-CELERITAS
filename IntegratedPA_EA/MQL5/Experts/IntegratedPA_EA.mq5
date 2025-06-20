@@ -6,7 +6,6 @@
 
 #include <Trade/Trade.mqh>
 #include <Arrays/ArrayObj.mqh>
-#include <IntegratedPA/MarketContext.mqh>
 #include <IntegratedPA/RiskManager.mqh>
 #include <IntegratedPA/TradeExecutor.mqh>
 #include <IntegratedPA/Logger.mqh>
@@ -53,7 +52,6 @@ input bool UsePreMarketRoutine = true;
 
 #include <IntegratedPA/SignalEngine.mqh>
 
-MarketContext *g_market = NULL;
 SignalEngine *g_engine = NULL;
 RiskManager *g_risk = NULL;
 TradeExecutor *g_exec = NULL;
@@ -366,7 +364,6 @@ int OnInit()
 
    ResetDailyLimits();
 
-   g_market = new MarketContext();
    g_engine = new SignalEngine();
    g_risk = new RiskManager(RiskPerTrade, MaxTotalRisk);
    g_exec = new TradeExecutor();
@@ -381,11 +378,6 @@ int OnInit()
 void OnDeinit(const int reason)
 {
    EventKillTimer();
-   if (g_market)
-   {
-      delete g_market;
-      g_market = NULL;
-   }
    if (g_engine)
    {
       delete g_engine;
@@ -428,7 +420,7 @@ void OnTick()
    MaybeRunPreMarketRoutine();
    // manage existing positions first
    if (g_exec)
-      g_exec.ManageOpenPositions(g_market, g_assets, ArraySize(g_assets), MainTimeframe);
+      g_exec.ManageOpenPositions(g_assets, ArraySize(g_assets), MainTimeframe);
    MaybeCloseEODPositions();
 
    if (g_dailyPaused)
@@ -448,7 +440,6 @@ void OnTick()
          continue;
 
       
-      g_market.set_sr(symbol);
 
       Signal sig = g_engine.Generate(symbol, MainTimeframe, g_assets[i]);
       

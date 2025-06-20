@@ -4,7 +4,6 @@
 #include "Defs.mqh"
 #include "Logger.mqh"
 #include "Utils.mqh"
-#include "MarketContext.mqh"
 
 class TradeExecutor
 {
@@ -57,7 +56,7 @@ public:
    }
 
    // manage partial exits and trailing stops as per the trading guide
-  void ManageOpenPositions(MarketContext *ctx,const AssetConfig &assets[],int count,ENUM_TIMEFRAMES tf)
+  void ManageOpenPositions(const AssetConfig &assets[],int count,ENUM_TIMEFRAMES tf)
   {
       for(int i=PositionsTotal()-1;i>=0;i--)
       {
@@ -99,9 +98,7 @@ public:
                break;
            }
         }
-         MARKET_PHASE phase=PHASE_UNDEFINED;
-         if(ctx!=NULL)
-            phase=ctx.DetectPhase(symbol,tf,rangeThreshold);
+        MARKET_PHASE phase=PHASE_UNDEFINED;
 
          string gv="stage_"+(string)ticket;
          double stage=0.0;

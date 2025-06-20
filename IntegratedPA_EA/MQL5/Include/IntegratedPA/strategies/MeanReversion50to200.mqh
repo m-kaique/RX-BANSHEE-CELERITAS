@@ -13,6 +13,8 @@
 //+------------------------------------------------------------------+
 class MeanReversion50to200
 {
+private:
+   MarketContextAnalyzer m_ctx;
 public:
    MeanReversion50to200(){}
    ~MeanReversion50to200(){}
@@ -20,8 +22,7 @@ public:
    // Identify mean reversion opportunity
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
          return false;
       double ema50 = GetEMA(symbol,tf,50);
       double ema200= GetEMA(symbol,tf,200);

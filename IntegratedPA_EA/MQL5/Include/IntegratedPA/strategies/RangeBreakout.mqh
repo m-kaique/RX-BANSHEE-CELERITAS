@@ -10,6 +10,7 @@ private:
    double m_high;
    double m_low;
    bool   m_buySignal;
+   MarketContextAnalyzer m_ctx;
 public:
    RangeBreakout():m_high(0),m_low(0),m_buySignal(false){}
    ~RangeBreakout(){}
@@ -17,8 +18,7 @@ public:
    // Identify breakout beyond range boundaries with volume/VWAP confirmation
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_RANGE)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_RANGE)
          return false;
       const int lookback=20;
       int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,2);

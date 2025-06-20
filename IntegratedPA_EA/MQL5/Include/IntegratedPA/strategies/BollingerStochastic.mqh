@@ -9,6 +9,7 @@ class BollingerStochastic
 {
 private:
    bool m_buy;
+   MarketContextAnalyzer m_ctx;
 public:
    BollingerStochastic():m_buy(false){}
    ~BollingerStochastic(){}
@@ -16,8 +17,7 @@ public:
    // Identify setup according to guide lines 3600-3625
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
          return false;
       double ema9=GetEMA(symbol,tf,9);
       double ema50=GetEMA(symbol,tf,50);

@@ -14,6 +14,7 @@ private:
    double m_high;
    double m_low;
    bool   m_buySignal;
+   MarketContextAnalyzer m_ctx;
 public:
    FibonacciRetrace():m_high(0),m_low(0),m_buySignal(false){}
    ~FibonacciRetrace(){}
@@ -21,8 +22,7 @@ public:
    // Identifica a presen\u00e7a de retra\u00e7\u00e3o at\u00e9 61,8% e candle de revers\u00e3o
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
          return false;
       const int lookback=50;
       int idxHigh=iHighest(symbol,tf,MODE_HIGH,lookback,1);

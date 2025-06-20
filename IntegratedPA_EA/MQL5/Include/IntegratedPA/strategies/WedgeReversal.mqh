@@ -5,6 +5,8 @@
 
 class WedgeReversal
 {
+private:
+   MarketContextAnalyzer m_ctx;
 public:
    WedgeReversal(){}
    ~WedgeReversal(){}
@@ -12,8 +14,7 @@ public:
    // Identify rising/falling wedge as described in guide lines 4316-4379
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &isRising,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
          return false;
       isRising=false;
 

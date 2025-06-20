@@ -69,79 +69,81 @@ public:
 
       if(UseSpikeAndChannel)
       {
-         SpikeAndChannel sac;
-         if(sac.Identify(symbol,tf,asset))
-            return sac.GenerateSignal(symbol,tf,asset);
+         if(m_spikeAndChannel.Identify(symbol,tf,asset))
+            return m_spikeAndChannel.GenerateSignal(symbol,tf,asset);
       }
 
       if(UsePullbackMA)
       {
-         PullbackToMA pb;
-         if(pb.Identify(symbol,tf,asset))
-            return pb.GenerateSignal(symbol,tf,asset);
+         if(m_pullbackMA.Identify(symbol,tf,asset))
+            return m_pullbackMA.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseFibonacciRetrace)
       {
-         FibonacciRetrace fr;
-         if(fr.Identify(symbol,tf,asset))
-            return fr.GenerateSignal(symbol,tf,asset);
+         if(m_fibRetrace.Identify(symbol,tf,asset))
+            return m_fibRetrace.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseBollingerStochastic)
       {
-         BollingerStochastic bs;
-         if(bs.Identify(symbol,tf,asset))
-            return bs.GenerateSignal(symbol,tf,asset);
+         if(m_bollStoch.Identify(symbol,tf,asset))
+            return m_bollStoch.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseTrendRangeDay)
       {
-         TrendRangeDay trd;
-         if(trd.Identify(symbol,tf,asset))
-            return trd.GenerateSignal(symbol,tf,asset);
+         if(m_trendRangeDay.Identify(symbol,tf,asset))
+            return m_trendRangeDay.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseRangeBreakout)
       {
-         RangeBreakout br;
-         if(br.Identify(symbol,tf,asset))
-            return br.GenerateSignal(symbol,tf,asset);
+         if(m_rangeBreakout.Identify(symbol,tf,asset))
+            return m_rangeBreakout.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseRangeFade)
       {
-         RangeFade rf;
-         if(rf.Identify(symbol,tf,asset))
-            return rf.GenerateSignal(symbol,tf,asset);
+         if(m_rangeFade.Identify(symbol,tf,asset))
+            return m_rangeFade.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseWedgeReversal)
       {
-         WedgeReversal wr;
          bool rising=false;
-         if(wr.Identify(symbol,tf,rising,asset))
-            return wr.GenerateSignal(symbol,tf,asset);
+         if(m_wedgeRev.Identify(symbol,tf,rising,asset))
+            return m_wedgeRev.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseMeanReversion50200)
       {
-         MeanReversion50to200 mr;
          bool buy=false;
-         if(mr.Identify(symbol,tf,buy,asset))
-            return mr.GenerateSignal(symbol,tf,asset);
+         if(m_meanRev.Identify(symbol,tf,buy,asset))
+            return m_meanRev.GenerateSignal(symbol,tf,asset);
       }
 
       if(UseVWAPReversion)
       {
-         VWAPReversion vr;
          bool buy2=false;
-         if(vr.Identify(symbol,tf,buy2,asset))
-            return vr.GenerateSignal(symbol,tf,asset);
+         if(m_vwapRev.Identify(symbol,tf,buy2,asset))
+            return m_vwapRev.GenerateSignal(symbol,tf,asset);
       }
 
       return s;
    }
+
+private:
+   SpikeAndChannel      m_spikeAndChannel;
+   PullbackToMA         m_pullbackMA;
+   FibonacciRetrace     m_fibRetrace;
+   BollingerStochastic  m_bollStoch;
+   TrendRangeDay        m_trendRangeDay;
+   RangeBreakout        m_rangeBreakout;
+   RangeFade            m_rangeFade;
+   WedgeReversal        m_wedgeRev;
+   MeanReversion50to200 m_meanRev;
+   VWAPReversion        m_vwapRev;
 };
 
 #endif // INTEGRATEDPA_SIGNALENGINE_MQH

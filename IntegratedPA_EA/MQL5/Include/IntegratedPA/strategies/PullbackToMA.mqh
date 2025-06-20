@@ -6,14 +6,15 @@
 
 class PullbackToMA
 {
+private:
+    MarketContextAnalyzer m_ctx;
 public:
     PullbackToMA(){}
     ~PullbackToMA(){}
 
     bool Identify(const string symbol, ENUM_TIMEFRAMES tf,const AssetConfig &asset)
     {
-        MarketContextAnalyzer ctx;
-        if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+        if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
             return false;
         // avoid entries when price is already near the 50-200 mean
         if(CheckMeanReversion50to200(symbol, tf))

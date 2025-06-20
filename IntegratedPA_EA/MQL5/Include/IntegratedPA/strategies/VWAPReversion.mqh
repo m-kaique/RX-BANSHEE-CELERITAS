@@ -6,6 +6,8 @@
 
 class VWAPReversion
 {
+private:
+   MarketContextAnalyzer m_ctx;
 public:
    VWAPReversion(){}
    ~VWAPReversion(){}
@@ -13,8 +15,7 @@ public:
    // Identify when price is stretched away from VWAP and showing exhaustion
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,bool &buySignal,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_REVERSAL)
          return false;
       double vwap = GetVWAP(symbol,tf);
       double atr  = GetATR(symbol,tf,14);

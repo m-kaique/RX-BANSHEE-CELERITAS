@@ -6,6 +6,8 @@
 
 class TrendRangeDay
 {
+private:
+   MarketContextAnalyzer m_ctx;
 public:
    TrendRangeDay(){}
    ~TrendRangeDay(){}
@@ -15,8 +17,7 @@ public:
    // moving in the direction of the trend
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
          return false;
       // do not trade trend setups if price is mean reverting to the 50-200 zone
       if(CheckMeanReversion50to200(symbol,tf))

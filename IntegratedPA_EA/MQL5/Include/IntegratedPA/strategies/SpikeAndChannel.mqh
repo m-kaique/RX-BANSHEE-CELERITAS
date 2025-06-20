@@ -6,6 +6,8 @@
 
 class SpikeAndChannel
 {
+private:
+   MarketContextAnalyzer m_ctx;
 public:
    SpikeAndChannel(){}
    ~SpikeAndChannel(){}
@@ -13,8 +15,7 @@ public:
    // Identify a Spike and Channel pattern using a simplified rule set
    bool Identify(const string symbol,ENUM_TIMEFRAMES tf,const AssetConfig &asset)
    {
-      MarketContextAnalyzer ctx;
-      if(ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
+      if(m_ctx.DetectPhaseMTF(symbol,tf,asset.ctxTf,asset.rangeThreshold)!=PHASE_TREND)
          return false;
       // skip if price is in mean reversion zone between EMA50 and EMA200
       if(CheckMeanReversion50to200(symbol,tf))

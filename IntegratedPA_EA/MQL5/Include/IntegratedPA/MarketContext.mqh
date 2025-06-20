@@ -1,6 +1,7 @@
 #ifndef INTEGRATEDPA_MARKETCONTEXT_MQH
 #define INTEGRATEDPA_MARKETCONTEXT_MQH
 #include "Utils.mqh"
+#include "Logger.mqh"
 
 /// Informacoes retornadas pela analise de contexto
 struct PhaseInfo
@@ -17,10 +18,12 @@ struct PhaseInfo
 class MarketContextAnalyzer
 {
 public:
-   MarketContextAnalyzer() {}
+   MarketContextAnalyzer():m_logger(NULL) {}
    ~MarketContextAnalyzer() {}
+   void SetLogger(Logger *logger){m_logger=logger;}
 
 private:
+   Logger *m_logger;
    // suporte e resistencia em varios timeframes
    SRLevels sr_macro, sr_alto, sr_medio, sr_micro;
    // garante que ha historico suficiente
@@ -150,7 +153,10 @@ private:
                 DoubleToString(rsi, 1);
          if (above200)
             desc += ", acima da EMA200";
-         Print(desc);
+         if(m_logger!=NULL)
+            m_logger.Log(LOG_DEBUG,"[TrendPhase " + symbol + " " + EnumToString(tf) + "] " + desc);
+         else
+            Print("TrendPhase:"+symbol+" "+EnumToString(tf)+" - "+desc);
          return true;
       }
 
@@ -161,12 +167,18 @@ private:
                 DoubleToString(rsi, 1);
          if (below200)
             desc += ", abaixo da EMA200";
-         Print(desc);
+         if(m_logger!=NULL)
+            m_logger.Log(LOG_DEBUG,"[TrendPhase " + symbol + " " + EnumToString(tf) + "] " + desc);
+         else
+            Print("TrendPhase:"+symbol+" "+EnumToString(tf)+" - "+desc);
          return true;
       }
 
       desc = "Sem Tendência em: " +  EnumToString(tf);
-         Print(desc);
+         if(m_logger!=NULL)
+            m_logger.Log(LOG_DEBUG,"[TrendPhase " + symbol + " " + EnumToString(tf) + "] " + desc);
+         else
+            Print("TrendPhase:"+symbol+" "+EnumToString(tf)+" - "+desc);
 
       return false;
    }
@@ -252,7 +264,13 @@ public:
    PhaseInfo DetectPhaseMTF(const string symbol, const ENUM_TIMEFRAMES &tfs[], int count,
                             double rangeThr = 10.0)
    {
-      Print("TIMEFRAMES EM DETECTPHASE MTF: " + EnumToString(tfs[0])+", "+ EnumToString(tfs[1]));
+      string tfList="";
+      for(int i=0;i<count && i<4;i++)
+         tfList+=((i>0)?", ":"")+EnumToString(tfs[i]);
+      if(m_logger!=NULL)
+         m_logger.Log(LOG_DEBUG,"[DetectPhaseMTF " + symbol + "] tfs=" + tfList);
+      else
+         Print("DetectPhaseMTF " + symbol + " tfs=" + tfList);
 
       PhaseInfo localInfos[4];
       string details = "";

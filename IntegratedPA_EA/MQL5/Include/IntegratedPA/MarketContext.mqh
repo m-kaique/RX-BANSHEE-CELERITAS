@@ -23,7 +23,7 @@ public:
 private:
    // suporte e resistencia em varios timeframes
    SRLevels sr_macro, sr_alto, sr_medio, sr_micro;
-// garante que ha historico suficiente
+   // garante que ha historico suficiente
    bool EnsureHistory(const string symbol, ENUM_TIMEFRAMES tf, int bars)
    {
       MqlRates rates[];
@@ -90,94 +90,74 @@ private:
    //================================================================================
    bool IsTrendPhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
    {
+      // Verificar se há dados suficientes
+      if (!EnsureHistory(symbol, tf, 200))
+      {
+         desc = "historico insuficiente";
+         return false;
+      }
 
-      double ema9 = GetEMA(symbol, tf, EMA_SONIC_PERIOD);
-      double ema20 = GetEMA(symbol, tf, EMA_FAST_PERIOD);
-      double ema50 = GetEMA(symbol, tf, EMA_MEDIUM_PERIOD);
+      // Obter valores das EMAs usando utils.mqh
+      double ema9 = GetEMA(symbol, tf, 9);
+      double ema21 = GetEMA(symbol, tf, 21);
+      double ema50 = GetEMA(symbol, tf, 50);
+      double ema200 = GetEMA(symbol, tf, 200);
 
-      // Avalia a inclinação das EMAs para timeframes muito curtos
-      double slope9  = GetEMASlope(symbol, tf, EMA_SONIC_PERIOD, 3);
-      double slope20 = GetEMASlope(symbol, tf, EMA_FAST_PERIOD, 3);
-      double slopeThr = AdaptiveSlopeThreshold(symbol, tf, 3);
+      if (ema9 == 0.0 || ema21 == 0.0 || ema50 == 0.0 || ema200 == 0.0)
+      {
+         desc = "erro ao obter EMAs";
+         return false;
+      }
 
-      double rsi = GetRSI(symbol, tf, DEFAULT_RSI_PERIOD);
+      // Verificar alinhamento das médias móveis
+      bool upTrendAlignment = (ema9 > ema21 && ema21 > ema50 && ema50 > ema200);
+      bool downTrendAlignment = (ema9 < ema21 && ema21 < ema50 && ema50 < ema200);
 
+      if (!upTrendAlignment && !downTrendAlignment)
+      {
+         return false;
+      }
+
+      // Verificar momentum com MACD
       double macdMain, macdSig;
-      bool macdOk = GetMACD(symbol, tf, 10, 21, 7, macdMain, macdSig);
-      double point = SymbolInfoDouble(symbol, SYMBOL_POINT); // WIN = 1.0
-
-      double diff9_20 = MathAbs(ema9 - ema20) / point;
-      double diff20_50 = MathAbs(ema20 - ema50) / point;
-
-
-      bool slopeUpOk = true;
-      bool slopeDownOk = true;
-      if (tf == PERIOD_M3)
+      if (!GetMACD(symbol, tf, 12, 26, 9, macdMain, macdSig))
       {
-         slopeUpOk = (slope9 > slopeThr && slope20 > slopeThr * 0.5);
-         slopeDownOk = (slope9 < -slopeThr && slope20 < -slopeThr * 0.5);
+         desc = "erro ao obter MACD";
+         return false;
       }
 
-      bool upTrendEMAs = (ema9 > ema20 && diff9_20 > rangeThr &&
-                          ema20 > ema50 && diff20_50 > rangeThr && slopeUpOk);
+      bool upMomentum = (macdMain > macdSig && macdMain > 0);
+      bool downMomentum = (macdMain < macdSig && macdMain < 0);
 
-      // MACD: força recente de alta (main acima da signal).
-      // RSI > 60: viés comprador está ativo, mas ainda não em sobrecompra (>70).
-      bool upTrendIndicators = (macdOk && macdMain > macdSig && rsi > 60);
-
-      if (upTrendEMAs && upTrendIndicators)
+      // Verificar RSI
+      double rsi = GetRSI(symbol, tf, 14);
+      if (rsi == 0.0)
       {
-         // Confirmar com OBV
-         bool obvConfirm = CheckOBVTrendConfirmation(symbol, tf, true);
-         bool bollingerConfirm = BollingerTrendConfirm(symbol, tf, true);
-
-         if (obvConfirm && bollingerConfirm)
-         {
-            double obv = GetOBV(symbol, tf, VOLUME_REAL);
-            double obvSma = GetOBVSMA(symbol, tf, 14);
-            desc = "Tendência de Alta: EMAs alinhadas, MACD>signal, RSI=" +
-                   DoubleToString(rsi, 1);
-            if (tf == PERIOD_M3)
-               desc += ", slope=" + DoubleToString(slope9, 2);
-            desc += ", OBV confirmando (" +
-                    DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
-
-            Print("diff9_20 ->>>>>>>>>> " + (string)diff9_20);
-            Print("diff20_50 ->>>>>>>>>> " + (string)diff20_50);
-            Print(desc);
-            return true;
-         }
+         desc = "erro ao obter RSI";
+         return false;
       }
 
-      // Verificação de tendência de baixa
-      bool downTrendEMAs = (ema9 < ema20 && diff9_20 > rangeThr &&
-                            ema20 < ema50 && diff20_50 > rangeThr && slopeDownOk);
-      bool downTrendIndicators = (macdOk && macdMain < macdSig && rsi < 40);
-
-      if (downTrendEMAs && downTrendIndicators)
+      // Verificar condições de tendência de alta
+      if (upTrendAlignment && upMomentum && rsi > 60)
       {
-         // Confirmar com OBV
-         bool obvConfirm = CheckOBVTrendConfirmation(symbol, tf, false);
-         bool bollingerConfirm = BollingerTrendConfirm(symbol, tf, false);
-
-         if (obvConfirm && bollingerConfirm)
-         {
-            double obv = GetOBV(symbol, tf, VOLUME_REAL);
-            double obvSma = GetOBVSMA(symbol, tf, 14);
-            desc = "Tendência de Baixa: EMAs alinhadas, MACD<signal, RSI=" +
-                   DoubleToString(rsi, 1);
-            if (tf == PERIOD_M3)
-               desc += ", slope=" + DoubleToString(slope9, 2);
-            desc += ", OBV confirmando (" +
-                    DoubleToString(obv, 0) + " vs SMA=" + DoubleToString(obvSma, 0) + ")";
-            Print(desc);
-            return true;
-         }
+         desc = "Tendência de Alta: EMAs alinhadas (9>21>50>200), MACD>signal, RSI=" +
+                DoubleToString(rsi, 1) + "TIME FRAME MA: " + EnumToString(tf);
+         Print(desc);
+         return true;
       }
-      
+
+      // Verificar condições de tendência de baixa
+      if (downTrendAlignment && downMomentum && rsi < 40)
+      {
+         desc = "Tendência de Baixa: EMAs alinhadas (9<21<50<200), MACD<signal, RSI=" +
+                DoubleToString(rsi, 1) + "TIME FRAME MA: " + EnumToString(tf);
+         Print(desc);
+         return true;
+      }
+
       return false;
    }
-
+   
    bool IsRangePhase(const string symbol, ENUM_TIMEFRAMES tf, double rangeThr, string &desc)
    {
       double ema20 = GetEMA(symbol, tf, EMA_FAST_PERIOD);
@@ -257,6 +237,8 @@ public:
    PhaseInfo DetectPhaseMTF(const string symbol, const ENUM_TIMEFRAMES &tfs[], int count,
                             double rangeThr = 10.0)
    {
+      Print("TIMEFRAMES EM DETECTPHASE MTF: " + EnumToString(tfs[0])+", "+ EnumToString(tfs[1]));
+
       PhaseInfo localInfos[4];
       string details = "";
       int use = (count > 4) ? 4 : count;
@@ -355,7 +337,8 @@ public:
       return resistance;
    }
 
-   void set_sr(string symbol){
+   void set_sr(string symbol)
+   {
       sr_macro = ComputeAndDrawSR(symbol, PERIOD_H4, "ctx_macro");
       sr_alto = ComputeAndDrawSR(symbol, PERIOD_H1, "ctx_alto");
       sr_medio = ComputeAndDrawSR(symbol, PERIOD_M30, "ctx_médio");

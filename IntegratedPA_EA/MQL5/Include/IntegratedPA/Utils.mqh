@@ -1159,4 +1159,7 @@ inline void DrawSupportResistanceLines(const string symbol, ENUM_TIMEFRAMES tf,
 
       ChartRedraw(0);
    }
-#endif // INTEGRATEDPA_UTILS_MQH
+
+
+
+   #endif // INTEGRATEDPA_UTILS_MQH

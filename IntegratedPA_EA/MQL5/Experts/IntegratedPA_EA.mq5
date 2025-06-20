@@ -78,21 +78,17 @@ bool SetupIndicators()
       string symbol = g_assets[i].symbol;
 
       SymbolSelect(symbol, true);
-      GetEMAHandle(symbol, MainTimeframe, 9);
-      GetEMAHandle(symbol, MainTimeframe, 20);
-      GetEMAHandle(symbol, MainTimeframe, 50);
-      GetEMAHandle(symbol, MainTimeframe, 200);
+      // GetEMAHandle(symbol, MainTimeframe, 9);
+      // GetEMAHandle(symbol, MainTimeframe, 20);
+      // GetEMAHandle(symbol, MainTimeframe, 50);
+      // GetEMAHandle(symbol, MainTimeframe, 200);
       
       // médias do diário para definição de viés pré-mercado
       GetEMAHandle(symbol, PERIOD_D1, 20);
       GetEMAHandle(symbol, PERIOD_D1, 50);
       GetSMAHandle(symbol, PERIOD_D1, 200);
       GetATRHandle(symbol, g_assets[i].atrTf, g_assets[i].atrPeriod);
-      GetBBHandle(symbol, MainTimeframe, 20, 2.0);
-      GetStochasticHandle(symbol, MainTimeframe, 14, 3, 3);
-      GetRSIHandle(symbol, MainTimeframe, 14);
-      GetMFIHandle(symbol, MainTimeframe, 14);
-      GetOBVHandle(symbol, MainTimeframe, VOLUME_TICK);
+
    }
    return true;
 }
@@ -635,7 +631,7 @@ bool SetupAssets()
       g_assets[idx].riskPercent = 1.2;   // maior risco permitido
       g_assets[idx].trailStart = 1500.0; // trailing apos 1500 pontos de lucro
       g_assets[idx].trailDist = 350.0;   // distancia de 300-400 pontos
-      g_assets[idx].ctxTf = PERIOD_H1;   // context timeframe per guide
+      g_assets[idx].ctxTf = PERIOD_H4;   // context timeframe per guide
       g_assets[idx].atrTf = PERIOD_D1;   // volatilidade medida no diário conforme guia
       g_assets[idx].atrPeriod = 14;      // periodo do ATR diario
       g_assets[idx].prevHigh = 0.0;
